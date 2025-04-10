@@ -17,20 +17,19 @@
 use std::{path::Path, sync::Arc};
 
 use reth::{
-    api::NodeTypesWithDBAdapter,
-    beacon_consensus::EthBeaconConsensus,
-    network::noop::NoopNetwork,
-    providers::{
-        providers::{BlockchainProvider, StaticFileProvider},
-        ProviderFactory,
-    },
-    rpc::eth::EthApiBuilder,
-    transaction_pool::noop::NoopTransactionPool,
+    beacon_consensus::EthBeaconConsensus, network::noop::NoopNetwork, rpc::eth::EthApiBuilder,
     utils::open_db_read_only,
 };
-use reth_chainspec::ChainSpecBuilder;
 use reth_db::{mdbx::DatabaseArguments, ClientVersion, DatabaseEnv};
-
+use reth_ethereum::{
+    chainspec::ChainSpecBuilder,
+    node::{api::NodeTypesWithDBAdapter, EthEvmConfig, EthExecutorProvider, EthereumNode},
+    pool::noop::NoopTransactionPool,
+    provider::{
+        providers::{BlockchainProvider, StaticFileProvider},
+        ChainSpecProvider, ProviderFactory,
+    },
+};
 // Bringing up the RPC
 use reth::rpc::builder::{
     RethRpcModule, RpcModuleBuilder, RpcServerConfig, TransportRpcModuleConfig,
@@ -38,8 +37,6 @@ use reth::rpc::builder::{
 // Configuring the network parts, ideally also wouldn't need to think about this.
 use myrpc_ext::{MyRpcExt, MyRpcExtApiServer};
 use reth::tasks::TokioTaskExecutor;
-use reth_node_ethereum::{EthEvmConfig, EthExecutorProvider, EthereumNode};
-use reth_provider::ChainSpecProvider;
 
 // Custom rpc extension
 pub mod myrpc_ext;
