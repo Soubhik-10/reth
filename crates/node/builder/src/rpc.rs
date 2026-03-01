@@ -30,7 +30,7 @@ use reth_rpc::{
     eth::{core::EthRpcConverterFor, DevSigner, EthApiTypes, FullEthApiServer},
     AdminApi,
 };
-use reth_rpc_api::{eth::helpers::EthTransactions, IntoEngineApiRpcModule};
+use reth_rpc_api::{IntoEngineApiRpcModule, eth::helpers::{EthTransactions, block_access_list::GetBlockAccessList}};
 use reth_rpc_builder::{
     auth::{AuthRpcModule, AuthServerHandle},
     config::RethRpcServerConfig,
@@ -1375,7 +1375,8 @@ where
         >,
     >,
     PVB: PayloadValidatorBuilder<N>,
-    PVB::Validator: EngineApiValidator<<N::Types as NodeTypes>::Payload>,
+   PVB::Validator: EngineApiValidator<<N::Types as NodeTypes>::Payload>,
+    N::Provider: GetBlockAccessList,
 {
     type EngineApi = EngineApi<
         N::Provider,

@@ -43,11 +43,9 @@ use reth_rpc::{
 use reth_rpc_api::servers::{BlockSubmissionValidationApiServer, TestingApiServer};
 use reth_rpc_builder::{config::RethRpcServerConfig, middleware::RethRpcMiddleware};
 use reth_rpc_eth_api::{
-    helpers::{
-        config::{EthConfigApiServer, EthConfigHandler},
-        pending_block::BuildPendingEnv,
-    },
-    RpcConvert, RpcTypes, SignableTxRequest,
+    RpcConvert, RpcTypes, SignableTxRequest, helpers::{
+        block_access_list::GetBlockAccessList, config::{EthConfigApiServer, EthConfigHandler}, pending_block::BuildPendingEnv
+    }
 };
 use reth_rpc_eth_types::{error::FromEvmError, EthApiError};
 use reth_rpc_server_types::RethRpcModule;
@@ -378,7 +376,7 @@ where
 
 impl<N> Node<N> for EthereumNode
 where
-    N: FullNodeTypes<Types = Self>,
+    N: FullNodeTypes<Types = Self>,<N as FullNodeTypes>::Provider: GetBlockAccessList
 {
     type ComponentsBuilder = ComponentsBuilder<
         N,
@@ -401,7 +399,7 @@ where
     }
 }
 
-impl<N: FullNodeComponents<Types = Self>> DebugNode<N> for EthereumNode {
+impl<N: FullNodeComponents<Types = Self>> DebugNode<N> for EthereumNode where <N as FullNodeTypes>::Provider: GetBlockAccessList {
     type RpcBlock = alloy_rpc_types_eth::Block;
 
     fn rpc_to_primitive_block(rpc_block: Self::RpcBlock) -> reth_ethereum_primitives::Block {

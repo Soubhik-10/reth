@@ -7,17 +7,14 @@ use alloy_eips::{
     eip4895::Withdrawals,
     eip7685::RequestsOrHash,
 };
-use alloy_primitives::{BlockHash, BlockNumber, B256, U64};
+use alloy_primitives::{B256, BlockHash, BlockNumber, Bytes, Sealable, U64};
 use alloy_rpc_types_engine::{
-    CancunPayloadFields, ClientVersionV1, ExecutionData, ExecutionPayloadBodiesV1,
-    ExecutionPayloadBodyV1, ExecutionPayloadInputV2, ExecutionPayloadSidecar, ExecutionPayloadV1,
-    ExecutionPayloadV3, ExecutionPayloadV4, ForkchoiceState, ForkchoiceUpdated, PayloadId,
-    PayloadStatus, PraguePayloadFields,
+    CancunPayloadFields, ClientVersionV1, ExecutionData, ExecutionPayloadBodiesV1, ExecutionPayloadBodiesV2, ExecutionPayloadBodyV1, ExecutionPayloadBodyV2, ExecutionPayloadInputV2, ExecutionPayloadSidecar, ExecutionPayloadV1, ExecutionPayloadV3, ExecutionPayloadV4, ForkchoiceState, ForkchoiceUpdated, PayloadId, PayloadStatus, PraguePayloadFields
 };
 
 // TODO: Replace with alloy types once available in alloy bal-devnet2 branch
-type ExecutionPayloadBodiesV2 = ExecutionPayloadBodiesV1;
-type ExecutionPayloadBodyV2 = ExecutionPayloadBodyV1;
+//type ExecutionPayloadBodiesV2 = ExecutionPayloadBodiesV1;
+//type ExecutionPayloadBodyV2 = ExecutionPayloadBodyV1;
 use async_trait::async_trait;
 use jsonrpsee_core::{server::RpcModule, RpcResult};
 use reth_chainspec::EthereumHardforks;
@@ -28,17 +25,16 @@ use reth_payload_primitives::{
     validate_payload_timestamp, EngineApiMessageVersion, MessageValidationKind,
     PayloadOrAttributes, PayloadTypes,
 };
-use reth_primitives_traits::{Block, BlockBody};
+use reth_primitives_traits::{AlloyBlockHeader, Block, BlockBody};
 use reth_rpc_api::{
     EngineApiServer, IntoEngineApiRpcModule, RethEngineApiServer, RethNewPayloadInput,
-    RethPayloadStatus,
+    RethPayloadStatus, eth::helpers::block_access_list::GetBlockAccessList,
 };
 use reth_storage_api::{BlockReader, HeaderProvider, StateProviderFactory};
 use reth_tasks::Runtime;
 use reth_transaction_pool::TransactionPool;
 use std::{
-    sync::Arc,
-    time::{Instant, SystemTime},
+    hash::Hash, sync::Arc, time::{Instant, SystemTime}
 };
 use tokio::sync::oneshot;
 use tracing::{debug, trace, warn};
@@ -328,7 +324,7 @@ where
 impl<Provider, EngineT, Pool, Validator, ChainSpec>
     EngineApi<Provider, EngineT, Pool, Validator, ChainSpec>
 where
-    Provider: HeaderProvider + BlockReader + StateProviderFactory + 'static,
+    Provider: HeaderProvider + BlockReader + StateProviderFactory + GetBlockAccessList + 'static,
     EngineT: EngineTypes,
     Pool: TransactionPool + 'static,
     Validator: EngineApiValidator<EngineT>,
@@ -739,6 +735,7 @@ where
         self.get_payload_bodies_by_range_with(start, count, |block| ExecutionPayloadBodyV2 {
             transactions: block.body().encoded_2718_transactions(),
             withdrawals: block.body().withdrawals().cloned().map(Withdrawals::into_inner),
+            block_access_list: None,
         })
         .await
     }
@@ -819,17 +816,41 @@ where
     /// Called to retrieve execution payload bodies by hashes (V2).
     ///
     /// V2 includes the `block_access_list` field for EIP-7928 BAL support.
-    pub async fn get_payload_bodies_by_hash_v2(
-        &self,
-        hashes: Vec<BlockHash>,
-    ) -> EngineApiResult<ExecutionPayloadBodiesV2> {
-        // TODO: add block_access_list field once ExecutionPayloadBodyV2 is in alloy bal-devnet2
-        self.get_payload_bodies_by_hash_with(hashes, |block| ExecutionPayloadBodyV2 {
+  pub async fn get_payload_bodies_by_hash_v2(
+    &self,
+    hashes: Vec<BlockHash>,
+) -> EngineApiResult<ExecutionPayloadBodiesV2> {
+    // Step 1: Get bodies without block_access_list
+    let mut bodies = self
+        .get_payload_bodies_by_hash_with(hashes.clone(), |block| ExecutionPayloadBodyV2 {
             transactions: block.body().encoded_2718_transactions(),
-            withdrawals: block.body().withdrawals().cloned().map(Withdrawals::into_inner),
+            withdrawals: block
+                .body()
+                .withdrawals()
+                .cloned()
+                .map(Withdrawals::into_inner),
+            block_access_list: None,
         })
-        .await
+        .await?;
+
+    // Step 2: For each hash, fetch block access list async
+    for (body_opt, hash) in bodies.iter_mut().zip(hashes.into_iter()) {
+        if let Some(body) = body_opt.as_mut() {
+            let access_list = self
+                .inner
+                .provider
+                .get_block_access_list(hash)
+                .await.map_err(|err| EngineApiError::Internal(Box::new(err)))?;
+
+            if let Some(access_list) = access_list {
+                body.block_access_list =
+                    Some(Bytes::from(alloy_rlp::encode(access_list)));
+            }
+        }
     }
+
+    Ok(bodies)
+}
 
     /// Metrics version of `get_payload_bodies_by_hash_v2`
     pub async fn get_payload_bodies_by_hash_v2_metered(
@@ -1057,7 +1078,7 @@ where
 impl<Provider, EngineT, Pool, Validator, ChainSpec> EngineApiServer<EngineT>
     for EngineApi<Provider, EngineT, Pool, Validator, ChainSpec>
 where
-    Provider: HeaderProvider + BlockReader + StateProviderFactory + 'static,
+    Provider: HeaderProvider + BlockReader + StateProviderFactory + GetBlockAccessList + 'static,
     EngineT: EngineTypes<ExecutionData = ExecutionData>,
     Pool: TransactionPool + 'static,
     Validator: EngineApiValidator<EngineT>,
@@ -1426,7 +1447,7 @@ where
 impl<Provider, EngineT, Pool, Validator, ChainSpec> RethEngineApiServer<ExecutionData>
     for EngineApi<Provider, EngineT, Pool, Validator, ChainSpec>
 where
-    Provider: HeaderProvider + BlockReader + StateProviderFactory + 'static,
+    Provider: HeaderProvider + BlockReader + StateProviderFactory + GetBlockAccessList + 'static,
     EngineT: EngineTypes<ExecutionData = ExecutionData>,
     Pool: TransactionPool + 'static,
     Validator: EngineApiValidator<EngineT>,
