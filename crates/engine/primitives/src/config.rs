@@ -158,6 +158,10 @@ pub struct TreeConfig {
     /// When disabled, the BAL hashed post state is not sent to the multiproof task for
     /// early parallel state root computation.
     disable_bal_parallel_state_root: bool,
+    /// Whether to disable BAL (Block Access List) batched IO during prewarming.
+    /// When disabled, falls back to individual per-slot storage reads instead of
+    /// batched cursor reads via `storage_range`.
+    disable_bal_batch_io: bool,
     /// Maximum random jitter applied before each proof computation (trie-debug only).
     /// When set, each proof worker sleeps for a random duration up to this value
     /// before starting a proof calculation.
@@ -195,6 +199,7 @@ impl Default for TreeConfig {
             state_root_task_timeout: Some(DEFAULT_STATE_ROOT_TASK_TIMEOUT),
             disable_bal_parallel_execution: false,
             disable_bal_parallel_state_root: false,
+            disable_bal_batch_io: false,
             #[cfg(feature = "trie-debug")]
             proof_jitter: None,
         }
@@ -258,6 +263,7 @@ impl TreeConfig {
             state_root_task_timeout,
             disable_bal_parallel_execution: false,
             disable_bal_parallel_state_root: false,
+            disable_bal_batch_io: false,
             #[cfg(feature = "trie-debug")]
             proof_jitter: None,
         }
@@ -608,6 +614,17 @@ impl TreeConfig {
     #[cfg(feature = "trie-debug")]
     pub const fn with_proof_jitter(mut self, proof_jitter: Option<Duration>) -> Self {
         self.proof_jitter = proof_jitter;
+        self
+    }
+
+    /// Returns whether BAL batched IO is disabled.
+    pub const fn disable_bal_batch_io(&self) -> bool {
+        self.disable_bal_batch_io
+    }
+
+    /// Setter for whether to disable BAL batched IO.
+    pub const fn without_bal_batch_io(mut self, disable_bal_batch_io: bool) -> Self {
+        self.disable_bal_batch_io = disable_bal_batch_io;
         self
     }
 }
