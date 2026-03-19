@@ -72,7 +72,7 @@ pub(crate) fn parse_duration(s: &str) -> eyre::Result<Duration> {
 
 use alloy_consensus::Header;
 use alloy_eips::eip4844::kzg_to_versioned_hash;
-use alloy_primitives::{Address, B256};
+use alloy_primitives::{hex::FromHex, Address, Bytes, B256};
 use alloy_provider::{ext::EngineApi, network::AnyNetwork, RootProvider};
 use alloy_rpc_types_engine::{
     CancunPayloadFields, ExecutionPayload, ExecutionPayloadSidecar, ForkchoiceState,
@@ -284,6 +284,32 @@ pub(crate) async fn get_payload_with_sidecar(
     }
 }
 
+pub(crate) async fn fetch_block_access_list(
+    rpc_url: &str,
+    block_hash: B256,
+) -> eyre::Result<Bytes> {
+    let client = reqwest::Client::new();
+
+    let request = serde_json::json!({
+        "jsonrpc": "2.0",
+        "method": "debug_getBlockAccessList",
+        "params": [format!("{:#x}", block_hash)],
+        "id": 1
+    });
+
+    let response =
+        client.post(rpc_url).json(&request).send().await?.json::<serde_json::Value>().await?;
+
+    let hex_str = response
+        .get("result")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| eyre::eyre!("Invalid response: expected hex string"))?;
+
+    // Decode 0x-prefixed hex → raw bytes
+    let bytes = Bytes::from_hex(hex_str).map_err(|e| eyre::eyre!("hex decode failed: {e}"))?;
+
+    Ok(bytes)
+}
 #[cfg(test)]
 mod tests {
     use super::*;
