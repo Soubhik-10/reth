@@ -83,7 +83,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        storage: [stable, edge]
+        storage: [stable]
         # ethereum/rpc to be deprecated:
         # https://github.com/ethereum/hive/pull/1117
         scenario:
