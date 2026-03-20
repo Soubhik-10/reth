@@ -3,6 +3,7 @@
 use crate::{
     bench::{
         context::BenchContext,
+        helpers::fetch_block_access_list,
         metrics_scraper::MetricsScraper,
         output::{
             NewPayloadResult, TotalGasOutput, TotalGasRow, GAS_OUTPUT_SUFFIX,
@@ -52,7 +53,7 @@ impl Command {
             is_optimism,
             use_reth_namespace,
             rlp_blocks,
-        } = BenchContext::new(&self.benchmark, self.rpc_url).await?;
+        } = BenchContext::new(&self.benchmark, self.rpc_url.clone()).await?;
 
         let total_blocks = benchmark_mode.total_blocks();
 
@@ -122,8 +123,10 @@ impl Command {
 
             debug!(target: "reth-bench", number=?block.header.number, "Sending payload to engine");
 
+            let bal = fetch_block_access_list(&self.rpc_url, block.header.hash).await?;
+
             let (version, params) =
-                block_to_new_payload(block, is_optimism, rlp, use_reth_namespace)?;
+                block_to_new_payload(block, is_optimism, rlp, Some(bal), use_reth_namespace)?;
 
             let start = Instant::now();
             let server_timings =

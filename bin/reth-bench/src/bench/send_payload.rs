@@ -1,3 +1,5 @@
+use crate::bench::helpers::fetch_block_access_list;
+
 use super::helpers::{load_jwt_secret, read_input};
 use alloy_provider::network::AnyRpcBlock;
 use alloy_rpc_types_engine::ExecutionPayload;
@@ -77,13 +79,19 @@ impl Command {
         let blob_versioned_hashes =
             block.body.blob_versioned_hashes_iter().copied().collect::<Vec<_>>();
 
-        // Convert to execution payload
-        let execution_payload = ExecutionPayload::from_block_slow(&block).0;
+        let bal = fetch_block_access_list(
+            &self.rpc_url.clone().unwrap_or_default(),
+            block.header.hash_slow(),
+        )
+        .await?;
 
-        let use_v4 = block.header.requests_hash.is_some();
+        // Convert to execution payload
+        let execution_payload = ExecutionPayload::from_block_slow_with_bal(&block, bal).0;
+
+        let use_v5 = block.header.block_access_list_hash.is_some();
 
         // Create JSON request data
-        let json_request = if use_v4 {
+        let json_request = if use_v5 {
             serde_json::to_string(&(
                 execution_payload,
                 blob_versioned_hashes,
@@ -103,7 +111,7 @@ impl Command {
             Mode::Execute => {
                 // Create cast command
                 let mut command = std::process::Command::new("cast");
-                let method = if use_v4 { "engine_newPayloadV4" } else { "engine_newPayloadV3" };
+                let method = if use_v5 { "engine_newPayloadV5" } else { "engine_newPayloadV4" };
                 command.arg("rpc").arg(method).arg("--raw");
                 if let Some(rpc_url) = self.rpc_url {
                     command.arg("--rpc-url").arg(rpc_url);
