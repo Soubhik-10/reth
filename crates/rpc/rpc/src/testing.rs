@@ -241,7 +241,7 @@ where
         &self,
         request: TestingBuildBlockRequestV1,
     ) -> Result<ExecutionPayloadEnvelopeV6, Eth::Error> {
-        self.build_block(request, false)
+        self.build_block(request, true)
             .await?
             .try_into_v6()
             .map_err(RethError::other)

@@ -29,6 +29,7 @@ reth-chainspec.workspace = true
 
 # alloy
 alloy-eips.workspace = true
+alloy-rlp.workspace = true
 alloy-json-rpc.workspace = true
 alloy-consensus.workspace = true
 alloy-network.workspace = true

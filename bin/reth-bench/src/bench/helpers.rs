@@ -1,7 +1,7 @@
 //! Common helpers for reth-bench commands.
 
 use crate::valid_payload::call_forkchoice_updated;
-use eyre::Result;
+use eyre::{eyre, Result};
 use std::{
     io::{BufReader, Read},
     time::Duration,
@@ -71,8 +71,8 @@ pub(crate) fn parse_duration(s: &str) -> eyre::Result<Duration> {
 }
 
 use alloy_consensus::Header;
-use alloy_eips::eip4844::kzg_to_versioned_hash;
-use alloy_primitives::{hex::FromHex, Address, Bytes, B256};
+use alloy_eips::{eip4844::kzg_to_versioned_hash, eip7928::BlockAccessList};
+use alloy_primitives::{Address, Bytes, B256};
 use alloy_provider::{ext::EngineApi, network::AnyNetwork, RootProvider};
 use alloy_rpc_types_engine::{
     CancunPayloadFields, ExecutionPayload, ExecutionPayloadSidecar, ForkchoiceState,
@@ -292,7 +292,7 @@ pub(crate) async fn fetch_block_access_list(
 
     let request = serde_json::json!({
         "jsonrpc": "2.0",
-        "method": "debug_getBlockAccessList",
+        "method": "eth_getBlockAccessListByBlockHash",
         "params": [format!("{:#x}", block_hash)],
         "id": 1
     });
@@ -300,15 +300,13 @@ pub(crate) async fn fetch_block_access_list(
     let response =
         client.post(rpc_url).json(&request).send().await?.json::<serde_json::Value>().await?;
 
-    let hex_str = response
-        .get("result")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| eyre::eyre!("Invalid response: expected hex string"))?;
+    let result = response.get("result").ok_or_else(|| eyre!("Missing result field"))?;
 
-    // Decode 0x-prefixed hex → raw bytes
-    let bytes = Bytes::from_hex(hex_str).map_err(|e| eyre::eyre!("hex decode failed: {e}"))?;
+    let bal: BlockAccessList = serde_json::from_value(result.clone())
+        .map_err(|e| eyre!("Failed to deserialize BlockAccessList: {e}"))?;
 
-    Ok(bytes)
+    let bytes = alloy_rlp::encode(bal);
+    Ok(bytes.into())
 }
 #[cfg(test)]
 mod tests {
