@@ -29,10 +29,7 @@ use reth_payload_primitives::{
     PayloadOrAttributes, PayloadTypes,
 };
 use reth_primitives_traits::{Block, BlockBody};
-use reth_rpc_api::{
-    EngineApiServer, IntoEngineApiRpcModule, RethEngineApiServer, RethNewPayloadInput,
-    RethPayloadStatus,
-};
+use reth_rpc_api::{EngineApiServer, IntoEngineApiRpcModule};
 use reth_storage_api::{BlockReader, HeaderProvider, StateProviderFactory};
 use reth_tasks::Runtime;
 use reth_transaction_pool::TransactionPool;
