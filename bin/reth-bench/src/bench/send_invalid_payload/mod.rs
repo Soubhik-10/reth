@@ -3,6 +3,8 @@
 mod invalidation;
 use invalidation::InvalidationConfig;
 
+use crate::bench::helpers::fetch_block_access_list;
+
 use super::helpers::{load_jwt_secret, read_input};
 use alloy_primitives::{Address, B256};
 use alloy_provider::network::AnyRpcBlock;
@@ -239,16 +241,22 @@ impl Command {
             .try_map_transactions(|tx| tx.try_into_either::<OpTxEnvelope>())?
             .into_consensus();
 
+        let bal = fetch_block_access_list(
+            &self.rpc_url.clone().unwrap_or_default(),
+            block.header.hash_slow(),
+        )
+        .await?;
+
         let config = self.build_invalidation_config();
 
         let parent_beacon_block_root =
             self.parent_beacon_block_root.or(block.header.parent_beacon_block_root);
         let blob_versioned_hashes =
             block.body.blob_versioned_hashes_iter().copied().collect::<Vec<_>>();
-        let use_v4 = block.header.requests_hash.is_some();
+        let use_v5 = block.header.block_access_list_hash.is_some();
         let requests_hash = self.requests_hash.or(block.header.requests_hash);
 
-        let mut execution_payload = ExecutionPayload::from_block_slow(&block).0;
+        let mut execution_payload = ExecutionPayload::from_block_slow_with_bal(&block, bal).0;
 
         let changes = match &mut execution_payload {
             ExecutionPayload::V1(p) => config.apply_to_payload_v1(p),
@@ -306,7 +314,7 @@ impl Command {
             return Ok(());
         }
 
-        let json_request = if use_v4 {
+        let json_request = if use_v5 {
             serde_json::to_string(&(
                 execution_payload,
                 blob_versioned_hashes,
@@ -324,7 +332,7 @@ impl Command {
         match self.mode {
             Mode::Execute => {
                 let mut command = std::process::Command::new("cast");
-                let method = if use_v4 { "engine_newPayloadV4" } else { "engine_newPayloadV3" };
+                let method = if use_v5 { "engine_newPayloadV5" } else { "engine_newPayloadV4" };
                 command.arg("rpc").arg(method).arg("--raw");
                 if let Some(rpc_url) = self.rpc_url {
                     command.arg("--rpc-url").arg(rpc_url);

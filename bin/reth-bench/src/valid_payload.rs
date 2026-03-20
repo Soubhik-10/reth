@@ -213,6 +213,7 @@ pub(crate) fn block_to_new_payload(
     block: AnyRpcBlock,
     is_optimism: bool,
     rlp: Option<Bytes>,
+    block_access_list: Option<Bytes>,
     reth_new_payload: bool,
 ) -> eyre::Result<(Option<EngineApiMessageVersion>, serde_json::Value)> {
     if let Some(rlp) = rlp {
@@ -231,7 +232,8 @@ pub(crate) fn block_to_new_payload(
         .into_consensus();
 
     // Convert to execution payload
-    let (payload, sidecar) = ExecutionPayload::from_block_slow(&block); // ToDo: add bal ?
+    let (payload, sidecar) =
+        ExecutionPayload::from_block_slow_with_bal(&block, block_access_list.unwrap_or_default()); // ToDo: add bal ?
     let (version, params, execution_data) =
         payload_to_new_payload(payload, sidecar, is_optimism, block.withdrawals_root, None)?;
 
@@ -261,7 +263,7 @@ pub(crate) fn payload_to_new_payload(
             let prague = sidecar.prague().unwrap();
             let requests = prague.requests.requests_hash();
             (
-                EngineApiMessageVersion::V5,
+                EngineApiMessageVersion::V6,
                 serde_json::to_value((
                     payload,
                     cancun.versioned_hashes.clone(),

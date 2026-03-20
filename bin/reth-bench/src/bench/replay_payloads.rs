@@ -328,7 +328,7 @@ impl Command {
 
             debug!(
                 target: "reth-bench",
-                method = "engine_newPayloadV4",
+                method = "engine_newPayloadV5",
                 block_hash = %block_hash,
                 "Sending newPayload"
             );
@@ -349,7 +349,7 @@ impl Command {
                 (None, serde_json::to_value((RethNewPayloadInput::ExecutionData(reth_data),))?)
             } else {
                 (
-                    Some(EngineApiMessageVersion::V4),
+                    Some(EngineApiMessageVersion::V6),
                     serde_json::to_value((
                         execution_payload.clone(),
                         Vec::<B256>::new(),
