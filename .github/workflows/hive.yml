@@ -26,14 +26,6 @@ jobs:
       cargo_features: "asm-keccak"
       artifact_name: "reth-stable"
 
-  prepare-reth-edge:
-    uses: ./.github/workflows/prepare-reth.yml
-    with:
-      image_tag: ghcr.io/paradigmxyz/reth:latest
-      binary_name: reth
-      cargo_features: "asm-keccak edge"
-      artifact_name: "reth-edge"
-
   prepare-hive:
     if: github.repository == 'paradigmxyz/reth'
     timeout-minutes: 45
@@ -196,7 +188,6 @@ jobs:
             limit: .*tests/paris.*
     needs:
       - prepare-reth-stable
-      - prepare-reth-edge
       - prepare-hive
     name: ${{ matrix.storage }} / ${{ matrix.scenario.sim }}${{ matrix.scenario.limit && format(' - {0}', matrix.scenario.limit) }}
     # Use larger runners for eels tests to avoid OOM runner crashes
