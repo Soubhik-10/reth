@@ -123,8 +123,8 @@ jobs:
           # eth_ rpc methods
           - sim: ethereum/rpc-compat
             include:
-              # - eth_blockNumber
-              - eth_call
+              - eth_blockNumber
+              # - eth_call
               # - eth_chainId
               # - eth_createAccessList
               # - eth_estimateGas
