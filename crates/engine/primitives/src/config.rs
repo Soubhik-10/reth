@@ -158,6 +158,11 @@ pub struct TreeConfig {
     /// When disabled, the BAL hashed post state is not sent to the multiproof task for
     /// early parallel state root computation.
     disable_bal_parallel_state_root: bool,
+    /// Maximum random jitter applied before each proof computation (trie-debug only).
+    /// When set, each proof worker sleeps for a random duration up to this value
+    /// before starting a proof calculation.
+    #[cfg(feature = "trie-debug")]
+    proof_jitter: Option<Duration>,
 }
 
 impl Default for TreeConfig {
@@ -190,6 +195,8 @@ impl Default for TreeConfig {
             state_root_task_timeout: Some(DEFAULT_STATE_ROOT_TASK_TIMEOUT),
             disable_bal_parallel_execution: false,
             disable_bal_parallel_state_root: false,
+            #[cfg(feature = "trie-debug")]
+            proof_jitter: None,
         }
     }
 }
@@ -251,6 +258,8 @@ impl TreeConfig {
             state_root_task_timeout,
             disable_bal_parallel_execution: false,
             disable_bal_parallel_state_root: false,
+            #[cfg(feature = "trie-debug")]
+            proof_jitter: None,
         }
     }
 
@@ -586,6 +595,19 @@ impl TreeConfig {
         disable_bal_parallel_state_root: bool,
     ) -> Self {
         self.disable_bal_parallel_state_root = disable_bal_parallel_state_root;
+        self
+    }
+
+    /// Returns the proof jitter duration, if configured (trie-debug only).
+    #[cfg(feature = "trie-debug")]
+    pub const fn proof_jitter(&self) -> Option<Duration> {
+        self.proof_jitter
+    }
+
+    /// Setter for proof jitter (trie-debug only).
+    #[cfg(feature = "trie-debug")]
+    pub const fn with_proof_jitter(mut self, proof_jitter: Option<Duration>) -> Self {
+        self.proof_jitter = proof_jitter;
         self
     }
 }

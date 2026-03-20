@@ -423,6 +423,19 @@ pub struct EngineArgs {
     /// is not sent to the multiproof task for early parallel state root computation.
     #[arg(long = "engine.disable-bal-parallel-state-root", default_value_t = DefaultEngineValues::get_global().bal_parallel_state_root_disabled)]
     pub bal_parallel_state_root_disabled: bool,
+
+    /// Add random jitter before each proof computation (trie-debug only).
+    /// Each proof worker sleeps for a random duration up to this value before
+    /// starting work. Useful for stress-testing timing-sensitive proof logic.
+    ///
+    /// --engine.proof-jitter 100ms
+    /// --engine.proof-jitter 1s
+    #[cfg(feature = "trie-debug")]
+    #[arg(
+        long = "engine.proof-jitter",
+        value_parser = humantime::parse_duration,
+    )]
+    pub proof_jitter: Option<Duration>,
 }
 
 #[allow(deprecated)]
@@ -489,6 +502,8 @@ impl Default for EngineArgs {
                 .map(|s| humantime::parse_duration(s).expect("valid default duration")),
             bal_parallel_execution_disabled,
             bal_parallel_state_root_disabled,
+            #[cfg(feature = "trie-debug")]
+            proof_jitter: None,
         }
     }
 }
@@ -496,7 +511,7 @@ impl Default for EngineArgs {
 impl EngineArgs {
     /// Creates a [`TreeConfig`] from the engine arguments.
     pub fn tree_config(&self) -> TreeConfig {
-        TreeConfig::default()
+        let config = TreeConfig::default()
             .with_persistence_threshold(self.persistence_threshold)
             .with_memory_block_buffer_target(self.memory_block_buffer_target)
             .with_legacy_state_root(self.legacy_state_root_task_enabled)
@@ -520,7 +535,10 @@ impl EngineArgs {
             .with_disable_sparse_trie_cache_pruning(self.disable_sparse_trie_cache_pruning)
             .with_state_root_task_timeout(self.state_root_task_timeout.filter(|d| !d.is_zero()))
             .without_bal_parallel_execution(self.bal_parallel_execution_disabled)
-            .without_bal_parallel_state_root(self.bal_parallel_state_root_disabled)
+            .without_bal_parallel_state_root(self.bal_parallel_state_root_disabled);
+        #[cfg(feature = "trie-debug")]
+        let config = config.with_proof_jitter(self.proof_jitter);
+        config
     }
 }
 
@@ -577,6 +595,8 @@ mod tests {
             state_root_task_timeout: Some(Duration::from_secs(2)),
             bal_parallel_execution_disabled: true,
             bal_parallel_state_root_disabled: true,
+            #[cfg(feature = "trie-debug")]
+            proof_jitter: None,
         };
 
         let parsed_args = CommandParser::<EngineArgs>::parse_from([

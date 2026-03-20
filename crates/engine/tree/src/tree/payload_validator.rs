@@ -1051,6 +1051,7 @@ where
             let _enter = debug_span!(
                 target: "engine::tree",
                 "execute tx",
+                tx_index = senders.len() - 1,
             )
             .entered();
             trace!(target: "engine::tree", "Executing transaction");
