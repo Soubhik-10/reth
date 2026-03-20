@@ -423,6 +423,11 @@ pub struct EngineArgs {
     /// is not sent to the multiproof task for early parallel state root computation.
     #[arg(long = "engine.disable-bal-parallel-state-root", default_value_t = DefaultEngineValues::get_global().bal_parallel_state_root_disabled)]
     pub bal_parallel_state_root_disabled: bool,
+
+    /// Disable BAL (Block Access List) batched IO during prewarming. When set, falls back
+    /// to individual per-slot storage reads instead of batched cursor reads.
+    #[arg(long = "engine.disable-bal-batch-io", default_value_t = false)]
+    pub disable_bal_batch_io: bool,
 }
 
 #[allow(deprecated)]
@@ -489,6 +494,7 @@ impl Default for EngineArgs {
                 .map(|s| humantime::parse_duration(s).expect("valid default duration")),
             bal_parallel_execution_disabled,
             bal_parallel_state_root_disabled,
+            disable_bal_batch_io: false,
         }
     }
 }
@@ -521,6 +527,7 @@ impl EngineArgs {
             .with_state_root_task_timeout(self.state_root_task_timeout.filter(|d| !d.is_zero()))
             .without_bal_parallel_execution(self.bal_parallel_execution_disabled)
             .without_bal_parallel_state_root(self.bal_parallel_state_root_disabled)
+            .without_bal_batch_io(self.disable_bal_batch_io)
     }
 }
 
@@ -577,6 +584,7 @@ mod tests {
             state_root_task_timeout: Some(Duration::from_secs(2)),
             bal_parallel_execution_disabled: true,
             bal_parallel_state_root_disabled: true,
+            disable_bal_batch_io: true,
         };
 
         let parsed_args = CommandParser::<EngineArgs>::parse_from([
@@ -617,6 +625,7 @@ mod tests {
             "2s",
             "--engine.disable-bal-parallel-execution",
             "--engine.disable-bal-parallel-state-root",
+            "--engine.disable-bal-batch-io",
         ])
         .args;
 

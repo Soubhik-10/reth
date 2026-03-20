@@ -143,6 +143,8 @@ where
     disable_bal_parallel_execution: bool,
     /// Whether to disable BAL-driven parallel state root computation.
     disable_bal_parallel_state_root: bool,
+    /// Whether BAL batched IO is disabled.
+    disable_bal_batch_io: bool,
 }
 
 impl<N, Evm> PayloadProcessor<Evm>
@@ -179,6 +181,7 @@ where
             disable_cache_metrics: config.disable_cache_metrics(),
             disable_bal_parallel_execution: config.disable_bal_parallel_execution(),
             disable_bal_parallel_state_root: config.disable_bal_parallel_state_root(),
+            disable_bal_batch_io: config.disable_bal_batch_io(),
         }
     }
 }
@@ -505,6 +508,7 @@ where
             executed_tx_index: Arc::clone(&executed_tx_index),
             precompile_cache_disabled: self.precompile_cache_disabled,
             precompile_cache_map: self.precompile_cache_map.clone(),
+            disable_bal_batch_io: self.disable_bal_batch_io,
         };
 
         let (prewarm_task, to_prewarm_task) = PrewarmCacheTask::new(
