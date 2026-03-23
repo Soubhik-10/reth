@@ -162,6 +162,11 @@ pub struct TreeConfig {
     /// When disabled, falls back to individual per-slot storage reads instead of
     /// batched cursor reads via `storage_range`.
     disable_bal_batch_io: bool,
+    /// Maximum random jitter applied before each proof computation (trie-debug only).
+    /// When set, each proof worker sleeps for a random duration up to this value
+    /// before starting a proof calculation.
+    #[cfg(feature = "trie-debug")]
+    proof_jitter: Option<Duration>,
 }
 
 impl Default for TreeConfig {
@@ -195,6 +200,8 @@ impl Default for TreeConfig {
             disable_bal_parallel_execution: false,
             disable_bal_parallel_state_root: false,
             disable_bal_batch_io: false,
+            #[cfg(feature = "trie-debug")]
+            proof_jitter: None,
         }
     }
 }
@@ -257,6 +264,8 @@ impl TreeConfig {
             disable_bal_parallel_execution: false,
             disable_bal_parallel_state_root: false,
             disable_bal_batch_io: false,
+            #[cfg(feature = "trie-debug")]
+            proof_jitter: None,
         }
     }
 
@@ -592,6 +601,19 @@ impl TreeConfig {
         disable_bal_parallel_state_root: bool,
     ) -> Self {
         self.disable_bal_parallel_state_root = disable_bal_parallel_state_root;
+        self
+    }
+
+    /// Returns the proof jitter duration, if configured (trie-debug only).
+    #[cfg(feature = "trie-debug")]
+    pub const fn proof_jitter(&self) -> Option<Duration> {
+        self.proof_jitter
+    }
+
+    /// Setter for proof jitter (trie-debug only).
+    #[cfg(feature = "trie-debug")]
+    pub const fn with_proof_jitter(mut self, proof_jitter: Option<Duration>) -> Self {
+        self.proof_jitter = proof_jitter;
         self
     }
 

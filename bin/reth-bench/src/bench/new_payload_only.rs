@@ -53,6 +53,8 @@ impl Command {
             is_optimism,
             use_reth_namespace,
             rlp_blocks,
+            no_wait_for_persistence,
+            no_wait_for_caches,
         } = BenchContext::new(&self.benchmark, self.rpc_url.clone()).await?;
 
         let total_blocks = benchmark_mode.total_blocks();
@@ -125,8 +127,15 @@ impl Command {
 
             let bal = fetch_block_access_list(&self.rpc_url, block.header.hash).await?;
 
-            let (version, params) =
-                block_to_new_payload(block, is_optimism, rlp, Some(bal), use_reth_namespace)?;
+            let (version, params) = block_to_new_payload(
+                block,
+                is_optimism,
+                rlp,
+                Some(bal),
+                use_reth_namespace,
+                no_wait_for_persistence,
+                no_wait_for_caches,
+            )?;
 
             let start = Instant::now();
             let server_timings =
