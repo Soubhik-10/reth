@@ -423,7 +423,10 @@ pub struct EngineArgs {
     /// is not sent to the multiproof task for early parallel state root computation.
     #[arg(long = "engine.disable-bal-parallel-state-root", default_value_t = DefaultEngineValues::get_global().bal_parallel_state_root_disabled)]
     pub bal_parallel_state_root_disabled: bool,
-
+    /// Disable BAL (Block Access List) batched IO during prewarming. When set, falls back
+    /// to individual per-slot storage reads instead of batched cursor reads.
+    #[arg(long = "engine.disable-bal-batch-io", default_value_t = false)]
+    pub disable_bal_batch_io: bool,
     /// Add random jitter before each proof computation (trie-debug only).
     /// Each proof worker sleeps for a random duration up to this value before
     /// starting work. Useful for stress-testing timing-sensitive proof logic.
@@ -502,6 +505,7 @@ impl Default for EngineArgs {
                 .map(|s| humantime::parse_duration(s).expect("valid default duration")),
             bal_parallel_execution_disabled,
             bal_parallel_state_root_disabled,
+            disable_bal_batch_io: false,
             #[cfg(feature = "trie-debug")]
             proof_jitter: None,
         }
@@ -535,7 +539,9 @@ impl EngineArgs {
             .with_disable_sparse_trie_cache_pruning(self.disable_sparse_trie_cache_pruning)
             .with_state_root_task_timeout(self.state_root_task_timeout.filter(|d| !d.is_zero()))
             .without_bal_parallel_execution(self.bal_parallel_execution_disabled)
-            .without_bal_parallel_state_root(self.bal_parallel_state_root_disabled);
+            .without_bal_parallel_state_root(self.bal_parallel_state_root_disabled)
+            .without_bal_parallel_state_root(self.bal_parallel_state_root_disabled)
+            .without_bal_batch_io(self.disable_bal_batch_io);
         #[cfg(feature = "trie-debug")]
         let config = config.with_proof_jitter(self.proof_jitter);
         config
@@ -595,6 +601,7 @@ mod tests {
             state_root_task_timeout: Some(Duration::from_secs(2)),
             bal_parallel_execution_disabled: true,
             bal_parallel_state_root_disabled: true,
+            disable_bal_batch_io: true,
             #[cfg(feature = "trie-debug")]
             proof_jitter: None,
         };
@@ -637,6 +644,7 @@ mod tests {
             "2s",
             "--engine.disable-bal-parallel-execution",
             "--engine.disable-bal-parallel-state-root",
+            "--engine.disable-bal-batch-io",
         ])
         .args;
 
