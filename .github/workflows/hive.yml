@@ -36,7 +36,7 @@ jobs:
       - name: Checkout hive tests
         uses: actions/checkout@v6
         with:
-          repository: Soubhik-10/hive # rm later and use ethereum/hive
+          repository: ethereum/hive # rm later and use ethereum/hive
           ref: master
           path: hivetests
 
@@ -222,7 +222,7 @@ jobs:
       - name: Checkout hive tests
         uses: actions/checkout@v6
         with:
-          repository: Soubhik-10/hive
+          repository: ethereum/hive
           ref: master
           path: hivetests
 

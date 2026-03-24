@@ -766,6 +766,7 @@ ipnet = "2.11"
 
 # revm staging patches
 revm = { git = "https://github.com/bluealloy/revm", rev = "712dac7a" }
+# op-revm = { git = "https://github.com/bluealloy/revm", rev = "712dac7a" }
 revm-bytecode = { git = "https://github.com/bluealloy/revm", rev = "712dac7a" }
 revm-database = { git = "https://github.com/bluealloy/revm", rev = "712dac7a" }
 revm-database-interface = { git = "https://github.com/bluealloy/revm", rev = "712dac7a" }
@@ -817,6 +818,6 @@ alloy-tx-macros = { git = "https://github.com/alloy-rs/alloy", branch = "bal-dev
 
 # op-alloy bal-devnet2 patches
 op-alloy-consensus = { git = "https://github.com/alloy-rs/op-alloy", branch = "bal-devnet2" }
-op-alloy-network = { git = "https://github.com/alloy-rs/op-alloy", branch = "bal-devnet2" }
+# op-alloy-network = { git = "https://github.com/alloy-rs/op-alloy", branch = "bal-devnet2" }
 op-alloy-rpc-types = { git = "https://github.com/alloy-rs/op-alloy", branch = "bal-devnet2" }
 op-alloy-rpc-types-engine = { git = "https://github.com/alloy-rs/op-alloy", branch = "bal-devnet2" }
