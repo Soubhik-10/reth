@@ -67,11 +67,20 @@ alloy-rpc-types-engine.workspace = true
 
 ## async
 futures.workspace = true
-tokio = { workspace = true, features = ["sync", "macros", "time", "rt-multi-thread"] }
+tokio = { workspace = true, features = [
+    "sync",
+    "macros",
+    "time",
+    "rt-multi-thread",
+] }
 tokio-stream.workspace = true
 
 ## crypto
-secp256k1 = { workspace = true, features = ["global-context", "std", "recovery"] }
+secp256k1 = { workspace = true, features = [
+    "global-context",
+    "std",
+    "recovery",
+] }
 
 ## misc
 aquamarine.workspace = true
@@ -122,10 +131,10 @@ test-utils = [
     "reth-tasks/test-utils",
 ]
 trie-debug = ["reth-engine-tree/trie-debug"]
-op = [
-    "reth-db/op",
-    "reth-db-api/op",
-    "reth-engine-local/op",
-    "reth-evm/op",
-    "reth-primitives-traits/op",
-]
+# op = [
+#     "reth-db/op",
+#     "reth-db-api/op",
+#     "reth-engine-local/op",
+#     "reth-evm/op",
+#     "reth-primitives-traits/op",
+# ]
