@@ -489,7 +489,7 @@ where
             // Bump BAL index after each committed transaction (EIP-7928)
             self.executor.evm_mut().db_mut().bump_bal_index();
 
-            Ok(Some(gas_used))
+            Ok(Some(gas_used.into()))
         } else {
             Ok(None)
         }

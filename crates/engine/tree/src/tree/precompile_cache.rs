@@ -81,8 +81,8 @@ pub struct CacheEntry<S> {
 }
 
 impl<S> CacheEntry<S> {
-    const fn gas_used(&self) -> u64 {
-        self.output.gas_used
+    const fn regular_gas_used(&self) -> u64 {
+        self.output.gas.limit() - self.output.gas.remaining()
     }
 
     fn to_precompile_result(&self) -> PrecompileResult {
@@ -170,10 +170,10 @@ where
 
     fn call(&self, input: PrecompileInput<'_>) -> PrecompileResult {
         if let Some(entry) = &self.cache.get(input.data, self.spec_id.clone()) &&
-            input.gas >= entry.gas_used()
+            input.gas >= entry.regular_gas_used()
         {
             self.increment_by_one_precompile_cache_hits();
-            return entry.to_precompile_result()
+            return entry.to_precompile_result();
         }
 
         let calldata = input.data;
@@ -228,15 +228,14 @@ mod tests {
     use super::*;
     use reth_evm::{EthEvmFactory, Evm, EvmEnv, EvmFactory};
     use reth_revm::db::EmptyDB;
-    use revm::{context::TxEnv, precompile::PrecompileOutput};
+    use revm::{context::TxEnv, interpreter::gas::GasTracker, precompile::PrecompileOutput};
     use revm_primitives::hardfork::SpecId;
 
     #[test]
     fn test_precompile_cache_basic() {
         let dyn_precompile: DynPrecompile = (|_input: PrecompileInput<'_>| -> PrecompileResult {
             Ok(PrecompileOutput {
-                gas_used: 0,
-                gas_refunded: 0,
+                gas: GasTracker::new(0, 0, 0),
                 bytes: Bytes::default(),
                 reverted: false,
             })
@@ -247,8 +246,7 @@ mod tests {
             CachedPrecompile::new(dyn_precompile, PrecompileCache::default(), SpecId::PRAGUE, None);
 
         let output = PrecompileOutput {
-            gas_used: 50,
-            gas_refunded: 0,
+            gas: GasTracker::new(50, 0, 0),
             bytes: alloy_primitives::Bytes::copy_from_slice(b"cached_result"),
             reverted: false,
         };
@@ -279,8 +277,7 @@ mod tests {
                 assert_eq!(input.data, input_data);
 
                 Ok(PrecompileOutput {
-                    gas_used: 5000,
-                    gas_refunded: 0,
+                    gas: GasTracker::new(5000, 0, 0),
                     bytes: alloy_primitives::Bytes::copy_from_slice(b"output_from_precompile_1"),
                     reverted: false,
                 })
@@ -294,8 +291,7 @@ mod tests {
                 assert_eq!(input.data, input_data);
 
                 Ok(PrecompileOutput {
-                    gas_used: 7000,
-                    gas_refunded: 0,
+                    gas: GasTracker::new(7000, 0, 0),
                     bytes: alloy_primitives::Bytes::copy_from_slice(b"output_from_precompile_2"),
                     reverted: false,
                 })
