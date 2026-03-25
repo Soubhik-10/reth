@@ -286,7 +286,7 @@ dependencies = [
 [[package]]
 name = "alloy-evm"
 version = "0.29.2"
-source = "git+https://github.com/Soubhik-10/evm?branch=bal-state-gas#6d481a37154a3d8de6d469ded42442b2c3313ff9"
+source = "git+https://github.com/Soubhik-10/evm?branch=bal-state-gas#349fe102e02c6b890e20dabd52b68a7e051f4589"
 dependencies = [
  "alloy-consensus",
  "alloy-eips",
