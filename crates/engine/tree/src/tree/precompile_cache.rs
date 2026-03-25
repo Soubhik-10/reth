@@ -5,9 +5,11 @@ use alloy_primitives::{
     Bytes,
 };
 use moka::policy::EvictionPolicy;
-use reth_evm::precompiles::{DynPrecompile, Precompile, PrecompileInput};
+use reth_evm::precompiles::{
+    DynPrecompile, Precompile, PrecompileInput, PrecompileOutputExt, PrecompileResultExt,
+};
 use reth_primitives_traits::dashmap::DashMap;
-use revm::precompile::{PrecompileId, PrecompileOutput, PrecompileResult};
+use revm::precompile::PrecompileId;
 use revm_primitives::Address;
 use std::{hash::Hash, sync::Arc};
 
@@ -76,7 +78,7 @@ where
 /// Cache entry, precompile successful output.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CacheEntry<S> {
-    output: PrecompileOutput,
+    output: PrecompileOutputExt,
     spec: S,
 }
 
@@ -85,7 +87,7 @@ impl<S> CacheEntry<S> {
         self.output.gas.limit() - self.output.gas.remaining()
     }
 
-    fn to_precompile_result(&self) -> PrecompileResult {
+    fn to_precompile_result(&self) -> PrecompileResultExt {
         Ok(self.output.clone())
     }
 }
@@ -129,7 +131,7 @@ where
     ) -> DynPrecompile {
         let precompile_id = precompile.precompile_id().clone();
         let wrapped = Self::new(precompile, cache, spec_id, metrics);
-        (precompile_id, move |input: PrecompileInput<'_>| -> PrecompileResult {
+        (precompile_id, move |input: PrecompileInput<'_>| -> PrecompileResultExt {
             wrapped.call(input)
         })
             .into()
@@ -168,7 +170,7 @@ where
         self.precompile.precompile_id()
     }
 
-    fn call(&self, input: PrecompileInput<'_>) -> PrecompileResult {
+    fn call(&self, input: PrecompileInput<'_>) -> PrecompileResultExt {
         if let Some(entry) = &self.cache.get(input.data, self.spec_id.clone()) &&
             input.gas >= entry.regular_gas_used()
         {
@@ -233,8 +235,8 @@ mod tests {
 
     #[test]
     fn test_precompile_cache_basic() {
-        let dyn_precompile: DynPrecompile = (|_input: PrecompileInput<'_>| -> PrecompileResult {
-            Ok(PrecompileOutput {
+        let dyn_precompile: DynPrecompile = (|_input: PrecompileInput<'_>| -> PrecompileResultExt {
+            Ok(PrecompileOutputExt {
                 gas: GasTracker::new(0, 0, 0),
                 bytes: Bytes::default(),
                 reverted: false,
@@ -245,7 +247,7 @@ mod tests {
         let cache =
             CachedPrecompile::new(dyn_precompile, PrecompileCache::default(), SpecId::PRAGUE, None);
 
-        let output = PrecompileOutput {
+        let output = PrecompileOutputExt {
             gas: GasTracker::new(50, 0, 0),
             bytes: alloy_primitives::Bytes::copy_from_slice(b"cached_result"),
             reverted: false,
@@ -273,10 +275,10 @@ mod tests {
 
         // create the first precompile with a specific output
         let precompile1: DynPrecompile = (PrecompileId::custom("custom"), {
-            move |input: PrecompileInput<'_>| -> PrecompileResult {
+            move |input: PrecompileInput<'_>| -> PrecompileResultExt {
                 assert_eq!(input.data, input_data);
 
-                Ok(PrecompileOutput {
+                Ok(PrecompileOutputExt {
                     gas: GasTracker::new(5000, 0, 0),
                     bytes: alloy_primitives::Bytes::copy_from_slice(b"output_from_precompile_1"),
                     reverted: false,
@@ -287,10 +289,10 @@ mod tests {
 
         // create the second precompile with a different output
         let precompile2: DynPrecompile = (PrecompileId::custom("custom"), {
-            move |input: PrecompileInput<'_>| -> PrecompileResult {
+            move |input: PrecompileInput<'_>| -> PrecompileResultExt {
                 assert_eq!(input.data, input_data);
 
-                Ok(PrecompileOutput {
+                Ok(PrecompileOutputExt {
                     gas: GasTracker::new(7000, 0, 0),
                     bytes: alloy_primitives::Bytes::copy_from_slice(b"output_from_precompile_2"),
                     reverted: false,
