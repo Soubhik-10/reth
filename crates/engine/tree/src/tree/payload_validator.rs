@@ -27,10 +27,11 @@ use reth_consensus::{ConsensusError, FullConsensus, ReceiptRootBloom};
 use reth_engine_primitives::{
     ConfigureEngineEvm, ExecutableTxIterator, ExecutionPayload, InvalidBlockHook, PayloadValidator,
 };
-use reth_errors::{BlockExecutionError, ProviderResult};
+use reth_errors::{BlockExecutionError, BlockValidationError, ProviderResult};
 use reth_evm::{
-    block::BlockExecutor, execute::ExecutableTxFor, ConfigureEvm, EvmEnvFor, ExecutionCtxFor,
-    OnStateHook, SpecFor,
+    block::{BlockExecutor, GasOutput},
+    execute::ExecutableTxFor,
+    ConfigureEvm, EvmEnvFor, ExecutionCtxFor, OnStateHook, SpecFor,
 };
 use reth_payload_primitives::{
     BuiltPayload, InvalidPayloadAttributesError, NewPayloadError, PayloadTypes,
@@ -1079,12 +1080,14 @@ where
             let _ = match executor.execute_transaction(tx) {
                 Ok(res) => res,
 
-                Err(BlockExecutionError::Validation(err)) if err.is_initcode_larger_than_max() => {
-                    return GasOutput::default();
-                }
+                Err(BlockExecutionError::Validation(BlockValidationError::InvalidTx {
+                    error,
+                    ..
+                })) if error.is_initcode_larger_than_max() => GasOutput::default(),
 
                 Err(e) => return Err(e),
             };
+
             self.metrics.record_transaction_execution(tx_start.elapsed());
 
             // advance the shared counter so prewarm workers skip already-executed txs
