@@ -286,7 +286,7 @@ dependencies = [
 [[package]]
 name = "alloy-evm"
 version = "0.29.2"
-source = "git+https://github.com/Soubhik-10/evm?branch=bal-state-gas#5d94e67c358dcea2e6cff9b8d206ff4aad81d113"
+source = "git+https://github.com/Soubhik-10/evm?branch=bal-state-gas#21b5189f8ac568670b90065934591b653ab3aef8"
 dependencies = [
  "alloy-consensus",
  "alloy-eips",
@@ -12625,9 +12625,9 @@ checksum = "e6e4313cd5fcd3dad5cafa179702e2b244f760991f45397d14d4ebf38247da75"
 
 [[package]]
 name = "unicode-segmentation"
-version = "1.13.2"
+version = "1.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9629274872b2bfaf8d66f5f15725007f635594914870f65218920345aa11aa8c"
+checksum = "da36089a805484bcccfffe0739803392c8298778a2d2f09febf76fac5ad9025b"
 
 [[package]]
 name = "unicode-truncate"
