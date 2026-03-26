@@ -318,6 +318,9 @@ where
                 if error.is_nonce_too_low() {
                     // if the nonce is too low, we can skip this transaction
                     trace!(target: "payload_builder", %error, ?tx, "skipping nonce too low transaction");
+                } else if error.is_initcode_larger_than_max() {
+                    // if the initcode is larger than max, we can skip this transaction
+                    trace!(target: "payload_builder", %error, ?tx, "skipping initcode too high for transaction");
                 } else {
                     // if the transaction is invalid, we can skip it and all of its
                     // descendants
