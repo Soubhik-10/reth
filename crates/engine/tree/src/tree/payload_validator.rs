@@ -29,9 +29,8 @@ use reth_engine_primitives::{
 };
 use reth_errors::{BlockExecutionError, BlockValidationError, ProviderResult};
 use reth_evm::{
-    block::{BlockExecutor, GasOutput},
-    execute::ExecutableTxFor,
-    ConfigureEvm, EvmEnvFor, ExecutionCtxFor, OnStateHook, SpecFor,
+    block::BlockExecutor, execute::ExecutableTxFor, ConfigureEvm, EvmEnvFor, ExecutionCtxFor,
+    OnStateHook, SpecFor,
 };
 use reth_payload_primitives::{
     BuiltPayload, InvalidPayloadAttributesError, NewPayloadError, PayloadTypes,
@@ -1082,8 +1081,21 @@ where
 
                 Err(BlockExecutionError::Validation(BlockValidationError::InvalidTx {
                     error,
-                    ..
-                })) if error.is_initcode_larger_than_max() => GasOutput::default(),
+                    hash,
+                })) if error.is_initcode_larger_than_max() => {
+                    tracing::info!(
+                        target: "engine::tree",
+                        ?error,
+                        ?hash,
+                        ?tx_signer,
+                        "Transaction failed: initcode size exceeds maximum"
+                    );
+
+                    return Err(BlockExecutionError::Validation(BlockValidationError::InvalidTx {
+                        error,
+                        hash,
+                    }));
+                }
 
                 Err(e) => return Err(e),
             };
