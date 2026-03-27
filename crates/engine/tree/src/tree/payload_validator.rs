@@ -27,7 +27,7 @@ use reth_consensus::{ConsensusError, FullConsensus, ReceiptRootBloom};
 use reth_engine_primitives::{
     ConfigureEngineEvm, ExecutableTxIterator, ExecutionPayload, InvalidBlockHook, PayloadValidator,
 };
-use reth_errors::{BlockExecutionError, BlockValidationError, ProviderResult};
+use reth_errors::{BlockExecutionError, ProviderResult};
 use reth_evm::{
     block::BlockExecutor, execute::ExecutableTxFor, ConfigureEvm, EvmEnvFor, ExecutionCtxFor,
     OnStateHook, SpecFor,
@@ -985,9 +985,6 @@ where
             let built_hash = built_bal
                 .as_ref()
                 .map(|bal| alloy_eips::eip7928::compute_block_access_list_hash(bal));
-
-            tracing::info!("Expected hash for bal:{:?}", expected_hash);
-            tracing::info!("Built hash for bal:{:?}", built_hash);
 
             if let (Some(expected), Some(got)) = (expected_hash, built_hash) &&
                 expected != got
