@@ -1076,29 +1076,7 @@ where
             trace!(target: "engine::tree", "Executing transaction");
 
             let tx_start = Instant::now();
-            let _ = match executor.execute_transaction(tx) {
-                Ok(res) => res,
-
-                Err(BlockExecutionError::Validation(BlockValidationError::InvalidTx {
-                    error,
-                    hash,
-                })) if error.is_initcode_larger_than_max() => {
-                    tracing::info!(
-                        target: "engine::tree",
-                        ?error,
-                        ?hash,
-                        ?tx_signer,
-                        "Transaction failed: initcode size exceeds maximum"
-                    );
-
-                    return Err(BlockExecutionError::Validation(BlockValidationError::InvalidTx {
-                        error,
-                        hash,
-                    }));
-                }
-
-                Err(e) => return Err(e),
-            };
+            executor.execute_transaction(tx)?;
 
             self.metrics.record_transaction_execution(tx_start.elapsed());
 
