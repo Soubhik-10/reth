@@ -265,13 +265,13 @@ impl_compression_for_compact!(
     GenesisAccount
 );
 
-#[cfg(feature = "op")]
-mod op {
-    use super::*;
-    use op_alloy_consensus::{OpReceipt, OpTxEnvelope};
+// #[cfg(feature = "op")]
+// mod op {
+//     use super::*;
+//     use op_alloy_consensus::{OpReceipt, OpTxEnvelope};
 
-    impl_compression_for_compact!(OpTxEnvelope, OpReceipt);
-}
+//     impl_compression_for_compact!(OpTxEnvelope, OpReceipt);
+// }
 
 macro_rules! impl_compression_fixed_compact {
     ($($name:tt),+) => {
