@@ -985,7 +985,7 @@ where
             let built_hash = built_bal
                 .as_ref()
                 .map(|bal| alloy_eips::eip7928::compute_block_access_list_hash(bal));
-
+            tracing::info!(target: "engine::tree::payload_validator", "Computed BAL hashes : expected = {:?}, built = {:?}", expected_hash, built_hash);
             if let (Some(expected), Some(got)) = (expected_hash, built_hash) &&
                 expected != got
             {

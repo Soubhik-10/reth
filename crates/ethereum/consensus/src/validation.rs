@@ -63,6 +63,11 @@ where
         let default_bal = BlockAccessList::default();
         let block_access_list_hash =
             compute_block_access_list_hash(block_access_list.as_ref().unwrap_or(&default_bal));
+        tracing::debug!(
+
+            "Block access list hash calculated {block_access_list_hash} and from header {block_bal_hash}"
+        );
+
         if block_access_list_hash != block_bal_hash {
             return Err(ConsensusError::BlockAccessListHashMismatch(
                 (block_access_list_hash, block_bal_hash).into(),
