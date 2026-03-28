@@ -976,6 +976,7 @@ where
                 input.block_access_list().transpose().map_err(BlockExecutionError::other)?;
 
             let built_bal = db.take_built_alloy_bal();
+            tracing::info!(target: "engine::tree::payload_validator", "Extracted BALs : expected = {:?}, built = {:?}", expected_bal, built_bal);
 
             // Compute hashes and compare
             let expected_hash = expected_bal
