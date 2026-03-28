@@ -6289,24 +6289,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "op-alloy-rpc-types"
-version = "0.23.1"
-source = "git+https://github.com/alloy-rs/op-alloy?branch=bal-devnet2#d3c6e661ce58697327f53508f9514a75ca68eb60"
-dependencies = [
- "alloy-consensus",
- "alloy-eips",
- "alloy-network-primitives",
- "alloy-primitives",
- "alloy-rpc-types-eth",
- "alloy-serde",
- "derive_more",
- "op-alloy-consensus",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
-]
-
-[[package]]
 name = "op-alloy-rpc-types-engine"
 version = "0.23.1"
 source = "git+https://github.com/alloy-rs/op-alloy?branch=bal-devnet2#d3c6e661ce58697327f53508f9514a75ca68eb60"
@@ -9776,8 +9758,6 @@ dependencies = [
  "auto_impl",
  "dyn-clone",
  "jsonrpsee-types",
- "op-alloy-consensus",
- "op-alloy-rpc-types",
  "reth-evm",
  "reth-primitives-traits",
  "serde_json",
@@ -13834,3 +13814,8 @@ dependencies = [
  "cc",
  "pkg-config",
 ]
+
+[[patch.unused]]
+name = "op-alloy-rpc-types"
+version = "0.23.1"
+source = "git+https://github.com/alloy-rs/op-alloy?branch=bal-devnet2#d3c6e661ce58697327f53508f9514a75ca68eb60"
