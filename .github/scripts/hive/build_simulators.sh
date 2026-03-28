@@ -28,7 +28,7 @@ echo "Building images"
 ./hive -client reth --sim "ethereum/sync" -sim.timelimit 1s || true &
 wait
 
-# Run docker save in parallel, wait and exit on error
+# Run docker save in parallel, wait and exit on error .
 echo "Saving images"
 saving_pids=( )
 docker save hive/hiveproxy:latest -o ../hive_assets/hiveproxy.tar & saving_pids+=( $! )
