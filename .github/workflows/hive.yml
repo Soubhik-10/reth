@@ -201,7 +201,7 @@ jobs:
           - sim: ethereum/eels/consume-rlp
             limit: .*tests/osaka/eip7934_block_rlp_limit/test_max_block_rlp_size*
           - sim: ethereum/eels/consume-rlp
-            limit: .*tests/osaka/eip7883_modexp_gas_increase/test_modexp_thresholds*
+            limit: .*tests/osaka/eip7883_modexp_gas_increase/test_modexp_thresholds.py::test_modexp_variable_gas_cost_exceed_tx_gas_cap[fork_Amsterdam-blockchain_test_engine_from_state_test-Z16-gas-cap-test]*
     needs:
       - prepare-reth-stable
       - prepare-hive
@@ -263,12 +263,10 @@ jobs:
           find hivetests/workspace/logs -type f -name "*.json" ! -name "hive.json" | xargs -I {} python .github/scripts/hive/parse.py {} --exclusion .github/scripts/hive/expected_failures.yaml --ignored .github/scripts/hive/ignored_tests.yaml
 
       - name: Print simulator output
-        if: ${{ failure() }}
         run: |
           cat hivetests/workspace/logs/*simulator*.log
 
       - name: Print reth client logs
-        if: ${{ failure() }}
         run: |
           cat hivetests/workspace/logs/reth/client-*.log
   notify-on-error:
