@@ -1,6 +1,6 @@
 use crate::stages::MERKLE_STAGE_DEFAULT_INCREMENTAL_THRESHOLD;
 use alloy_consensus::BlockHeader;
-use alloy_eips::eip7928::{total_bal_items, ITEM_COST};
+use alloy_eips::eip7928::{total_bal_items, BlockAccessList, ITEM_COST};
 use alloy_primitives::BlockNumber;
 use num_traits::Zero;
 use reth_chainspec::{ChainSpecProvider, EthereumHardforks};
