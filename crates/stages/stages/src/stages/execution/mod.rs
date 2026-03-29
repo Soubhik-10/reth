@@ -358,8 +358,9 @@ where
                 })
             })?;
 
+            let bal;
             if block.header().block_access_list_hash().is_some() {
-                let bal = executor.take_bal();
+                bal = executor.take_bal();
 
                 let bal_items = total_bal_items(bal.as_deref().unwrap_or(&[]));
 
