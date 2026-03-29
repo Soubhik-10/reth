@@ -358,19 +358,20 @@ where
                 })
             })?;
 
-            let bal = executor.take_bal();
+            if block.header().block_access_list_hash().is_some() {
+                let bal = executor.take_bal();
 
-            let bal_items = total_bal_items(bal.as_deref().unwrap_or(&[]));
+                let bal_items = total_bal_items(bal.as_deref().unwrap_or(&[]));
 
-            if bal_items > block.gas_limit() / ITEM_COST as u64 {
-                return Err(StageError::Block {
-                    block: Box::new(block.block_with_parent()),
-                    error: BlockErrorKind::Validation(
-                        ConsensusError::BlockAccessListCostMoreThanGasLimit,
-                    ),
-                })
+                if bal_items > block.gas_limit() / ITEM_COST as u64 {
+                    return Err(StageError::Block {
+                        block: Box::new(block.block_with_parent()),
+                        error: BlockErrorKind::Validation(
+                            ConsensusError::BlockAccessListCostMoreThanGasLimit,
+                        ),
+                    })
+                }
             }
-
             if let Err(err) =
                 self.consensus.validate_block_post_execution(&block, &result, None, bal, true)
             {
