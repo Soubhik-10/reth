@@ -61,6 +61,7 @@ where
     if chain_spec.is_amsterdam_active_at_timestamp(block.header().timestamp()) && allow_bal_check {
         let block_bal_hash = block.header().block_access_list_hash().unwrap_or_default();
         let default_bal = BlockAccessList::default();
+        tracing::debug!(?block_access_list, "Block access list from payload");
         let block_access_list_hash =
             compute_block_access_list_hash(block_access_list.as_ref().unwrap_or(&default_bal));
         tracing::debug!(
