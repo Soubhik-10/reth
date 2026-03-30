@@ -264,7 +264,7 @@ jobs:
           cat hivetests/workspace/logs/*simulator*.log
 
       - name: Print reth client logs
-        if: ${{ failure() }}
+        if: ${{ always() }}
         run: |
           cat hivetests/workspace/logs/reth/client-*.log
   notify-on-error:
