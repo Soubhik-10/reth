@@ -149,7 +149,13 @@ jobs:
           # - sim: ethereum/eels/consume-engine
           #   limit: .*tests/osaka.*
           - sim: ethereum/eels/consume-engine
-            limit: .*tests/prague.*
+            limit: .*tests/prague/eip7702_set_code_tx/test_set_code_txs_2*
+          - sim: ethereum/eels/consume-engine
+            limit: .*tests/prague/eip7685_general_purpose_el_requests/test_multi_type_requests*
+          - sim: ethereum/eels/consume-engine
+            limit: .*tests/prague/eip6110_deposits/test_deposits*
+          - sim: ethereum/eels/consume-engine
+            limit: .*tests/prague/eip7002_el_triggerable_withdrawals/test_withdrawal_requests*
           # - sim: ethereum/eels/consume-engine
           #   limit: .*tests/cancun.*
           # - sim: ethereum/eels/consume-engine
