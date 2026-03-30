@@ -78,21 +78,12 @@ csv.workspace = true
 [features]
 default = ["jemalloc"]
 
-asm-keccak = [
-    "reth-node-core/asm-keccak",
-    "alloy-primitives/asm-keccak",
-]
+asm-keccak = ["reth-node-core/asm-keccak", "alloy-primitives/asm-keccak"]
 
-jemalloc = [
-    "reth-cli-util/jemalloc",
-    "reth-node-core/jemalloc",
-]
+jemalloc = ["reth-cli-util/jemalloc", "reth-node-core/jemalloc"]
 jemalloc-prof = ["reth-cli-util/jemalloc-prof"]
 tracy-allocator = ["reth-cli-util/tracy-allocator", "tracy"]
-tracy = [
-    "reth-node-core/tracy",
-    "reth-tracing/tracy",
-]
+tracy = ["reth-node-core/tracy", "reth-tracing/tracy"]
 
 min-error-logs = [
     "tracing/release_max_level_error",

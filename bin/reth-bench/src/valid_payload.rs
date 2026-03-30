@@ -242,7 +242,7 @@ pub(crate) fn block_to_new_payload(
 
     // Convert to execution payload
     let (payload, sidecar) =
-        ExecutionPayload::from_block_slow_with_bal(&block, block_access_list.unwrap_or_default()); // ToDo: add bal ?
+        ExecutionPayload::from_block_slow_with_bal(&block, block_access_list.unwrap_or_default());
     let (version, params, execution_data) =
         payload_to_new_payload(payload, sidecar, is_optimism, block.withdrawals_root, None)?;
 

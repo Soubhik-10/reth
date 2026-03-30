@@ -1,10 +1,11 @@
 use crate::stages::MERKLE_STAGE_DEFAULT_INCREMENTAL_THRESHOLD;
 use alloy_consensus::BlockHeader;
+use alloy_eips::eip7928::{total_bal_items, BlockAccessList, ITEM_COST};
 use alloy_primitives::BlockNumber;
 use num_traits::Zero;
 use reth_chainspec::{ChainSpecProvider, EthereumHardforks};
 use reth_config::config::ExecutionConfig;
-use reth_consensus::FullConsensus;
+use reth_consensus::{ConsensusError, FullConsensus};
 use reth_db::{static_file::HeaderMask, tables};
 use reth_evm::{execute::Executor, metrics::ExecutorMetrics, ConfigureEvm};
 use reth_execution_types::Chain;
@@ -357,7 +358,22 @@ where
                 })
             })?;
 
-            let bal = executor.take_bal();
+            let mut bal = Some(BlockAccessList::default());
+            if block.header().block_access_list_hash().is_some() {
+                bal = executor.take_bal();
+
+                let bal_items = total_bal_items(bal.as_deref().unwrap_or(&[]));
+
+                if bal_items > block.gas_limit() / ITEM_COST as u64 {
+                    return Err(StageError::Block {
+                        block: Box::new(block.block_with_parent()),
+                        error: BlockErrorKind::Validation(
+                            ConsensusError::BlockAccessListCostMoreThanGasLimit,
+                        ),
+                    })
+                }
+            }
+
             if let Err(err) =
                 self.consensus.validate_block_post_execution(&block, &result, None, bal, true)
             {

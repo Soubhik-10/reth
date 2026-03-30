@@ -1074,6 +1074,7 @@ where
 
             let tx_start = Instant::now();
             executor.execute_transaction(tx)?;
+
             self.metrics.record_transaction_execution(tx_start.elapsed());
 
             // advance the shared counter so prewarm workers skip already-executed txs
