@@ -85,11 +85,6 @@ pub struct CacheEntry<S> {
 impl<S> CacheEntry<S> {
     const fn regular_gas_used(&self) -> u64 {
         let regular_gas = self.output.gas.limit() - self.output.gas.remaining();
-        tracing::info!(
-            "from cache: regular_gas={regular_gas}, total_gas={}",
-            self.output.gas.limit()
-        );
-        tracing::info!("output gas remain: {}", self.output.gas.remaining());
         regular_gas
     }
 
@@ -178,11 +173,14 @@ where
 
     fn call(&self, input: PrecompileInput<'_>) -> PrecompileResultExt {
         tracing::info!("input gas from precompile: {}", input.gas);
-        if let Some(entry) = &self.cache.get(input.data, self.spec_id.clone()) &&
-            input.gas >= entry.regular_gas_used()
-        {
-            self.increment_by_one_precompile_cache_hits();
-            return entry.to_precompile_result();
+        if let Some(entry) = &self.cache.get(input.data, self.spec_id.clone()) {
+            tracing::info!("from cache: regular_gas_used:{:?}", entry.regular_gas_used());
+            tracing::info!("output gas remain: {}", entry.output.gas.remaining());
+            tracing::info!("output gas limit: {}", entry.output.gas.limit());
+            if input.gas >= entry.regular_gas_used() {
+                self.increment_by_one_precompile_cache_hits();
+                return entry.to_precompile_result();
+            }
         }
 
         let calldata = input.data;
