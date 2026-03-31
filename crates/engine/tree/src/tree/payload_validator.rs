@@ -972,14 +972,14 @@ where
         debug_span!(target: "engine::tree", "merge_transitions")
             .in_scope(|| db.merge_transitions(BundleRetention::Reverts));
 
-        let built_bal = None;
+        let mut built_bal = None;
         // Validate BAL hash if we executed with BAL tracking
         if has_bal {
             // Get the expected BAL from input and the built BAL from execution
             let expected_bal =
                 input.block_access_list().transpose().map_err(BlockExecutionError::other)?; // Todo Remove Later
 
-            let built_bal = db.take_built_alloy_bal();
+            built_bal = db.take_built_alloy_bal();
             tracing::info!(target: "engine::tree::payload_validator", "Extracted BALs : expected = {:?}, built = {:?}", expected_bal, built_bal);
         }
 
