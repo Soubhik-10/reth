@@ -35,7 +35,7 @@ checksum = "b169f7a6d4742236a0a00c541b845991d0ac43e546831af1249753ab4c3aa3a0"
 dependencies = [
  "cfg-if",
  "cipher",
- "cpufeatures",
+ "cpufeatures 0.2.17",
 ]
 
 [[package]]
@@ -286,7 +286,7 @@ dependencies = [
 [[package]]
 name = "alloy-evm"
 version = "0.29.2"
-source = "git+https://github.com/Soubhik-10/evm?branch=hive-test#2f5c5dd506dcbd9c5bb9c6ca4daa66563f26208d"
+source = "git+https://github.com/Soubhik-10/evm?branch=hive-test#4b5e7ed04ef714b85f8f565322cccd68ef428023"
 dependencies = [
  "alloy-consensus",
  "alloy-eips",
@@ -1654,16 +1654,16 @@ dependencies = [
 
 [[package]]
 name = "blake3"
-version = "1.8.3"
+version = "1.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2468ef7d57b3fb7e16b576e8377cdbde2320c60e1491e961d11da40fc4f02a2d"
+checksum = "4d2d5991425dfd0785aed03aedcf0b321d61975c9b5b3689c774a2610ae0b51e"
 dependencies = [
  "arrayref",
  "arrayvec",
  "cc",
  "cfg-if",
  "constant_time_eq",
- "cpufeatures",
+ "cpufeatures 0.3.0",
 ]
 
 [[package]]
@@ -2470,7 +2470,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "531185e432bb31db1ecda541e9e7ab21468d4d844ad7505e0546a49b4945d49b"
 dependencies = [
  "cfg-if",
- "cpufeatures",
+ "cpufeatures 0.2.17",
  "proptest",
  "serde_core",
 ]
@@ -2558,6 +2558,15 @@ name = "cpufeatures"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "59ed5838eebb26a2bb2e58f6d5b5316989ae9d08bab10e0e6d103e656d1b0280"
+dependencies = [
+ "libc",
+]
+
+[[package]]
+name = "cpufeatures"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8b2a41393f66f16b0823bb79094d54ac5fbd34ab292ddafb9a0456ac9f87d201"
 dependencies = [
  "libc",
 ]
@@ -2738,7 +2747,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "97fb8b7c4503de7d6ae7b42ab72a5a59857b4c937ec27a3d4539dba95b5ab2be"
 dependencies = [
  "cfg-if",
- "cpufeatures",
+ "cpufeatures 0.2.17",
  "curve25519-dalek-derive",
  "digest 0.10.7",
  "fiat-crypto",
@@ -3413,7 +3422,7 @@ version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c853bd72c9e5787f8aafc3df2907c2ed03cff3150c3acd94e2e53a98ab70a8ab"
 dependencies = [
- "cpufeatures",
+ "cpufeatures 0.2.17",
  "ring",
  "sha2",
 ]
@@ -4670,9 +4679,9 @@ dependencies = [
 
 [[package]]
 name = "hyper"
-version = "1.8.1"
+version = "1.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2ab2d4f250c3d7b1c9fcdff1cece94ea4e2dfbec68614f7b87cb205f24ca9d11"
+checksum = "6299f016b246a94207e63da54dbe807655bf9e00044f73ded42c3ac5305fbcca"
 dependencies = [
  "atomic-waker",
  "bytes",
@@ -4685,7 +4694,6 @@ dependencies = [
  "httpdate",
  "itoa",
  "pin-project-lite",
- "pin-utils",
  "smallvec",
  "tokio",
  "want",
@@ -5018,9 +5026,9 @@ dependencies = [
 
 [[package]]
 name = "insta"
-version = "1.47.1"
+version = "1.47.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "99322078b2c076829a1db959d49da554fabc4342257fc0ba5a070a1eb3a01cd8"
+checksum = "7b4a6248eb93a4401ed2f37dfe8ea592d3cf05b7cf4f8efa867b6895af7e094e"
 dependencies = [
  "console 0.16.3",
  "once_cell",
@@ -5226,9 +5234,9 @@ dependencies = [
 
 [[package]]
 name = "js-sys"
-version = "0.3.92"
+version = "0.3.93"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cc4c90f45aa2e6eacbe8645f77fdea542ac97a494bcd117a67df9ff4d611f995"
+checksum = "797146bb2677299a1eb6b7b50a890f4c361b29ef967addf5b2fa45dae1bb6d7d"
 dependencies = [
  "cfg-if",
  "futures-util",
@@ -5455,7 +5463,7 @@ version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cb26cec98cce3a3d96cbb7bced3c4b16e3d13f27ec56dbd62cbc8f39cfb9d653"
 dependencies = [
- "cpufeatures",
+ "cpufeatures 0.2.17",
 ]
 
 [[package]]
@@ -6701,7 +6709,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9d1fe60d06143b2430aa532c94cfe9e29783047f06c0d7fd359a9a51b729fa25"
 dependencies = [
  "cfg-if",
- "cpufeatures",
+ "cpufeatures 0.2.17",
  "opaque-debug",
  "universal-hash",
 ]
@@ -10465,7 +10473,7 @@ dependencies = [
 [[package]]
 name = "revm"
 version = "36.0.0"
-source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#184d8eafcac86bd12696a0adfaa4c0de9d0d7ec5"
+source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#15d02536c466c94196ed174fa682e29412bfaa2b"
 dependencies = [
  "revm-bytecode",
  "revm-context",
@@ -10483,7 +10491,7 @@ dependencies = [
 [[package]]
 name = "revm-bytecode"
 version = "9.0.0"
-source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#184d8eafcac86bd12696a0adfaa4c0de9d0d7ec5"
+source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#15d02536c466c94196ed174fa682e29412bfaa2b"
 dependencies = [
  "bitvec",
  "phf",
@@ -10494,7 +10502,7 @@ dependencies = [
 [[package]]
 name = "revm-context"
 version = "15.0.0"
-source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#184d8eafcac86bd12696a0adfaa4c0de9d0d7ec5"
+source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#15d02536c466c94196ed174fa682e29412bfaa2b"
 dependencies = [
  "bitvec",
  "cfg-if",
@@ -10510,7 +10518,7 @@ dependencies = [
 [[package]]
 name = "revm-context-interface"
 version = "16.0.0"
-source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#184d8eafcac86bd12696a0adfaa4c0de9d0d7ec5"
+source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#15d02536c466c94196ed174fa682e29412bfaa2b"
 dependencies = [
  "alloy-eip2930",
  "alloy-eip7702",
@@ -10525,7 +10533,7 @@ dependencies = [
 [[package]]
 name = "revm-database"
 version = "12.0.0"
-source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#184d8eafcac86bd12696a0adfaa4c0de9d0d7ec5"
+source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#15d02536c466c94196ed174fa682e29412bfaa2b"
 dependencies = [
  "alloy-eips",
  "revm-bytecode",
@@ -10538,7 +10546,7 @@ dependencies = [
 [[package]]
 name = "revm-database-interface"
 version = "10.0.0"
-source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#184d8eafcac86bd12696a0adfaa4c0de9d0d7ec5"
+source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#15d02536c466c94196ed174fa682e29412bfaa2b"
 dependencies = [
  "auto_impl",
  "either",
@@ -10551,7 +10559,7 @@ dependencies = [
 [[package]]
 name = "revm-handler"
 version = "17.0.0"
-source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#184d8eafcac86bd12696a0adfaa4c0de9d0d7ec5"
+source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#15d02536c466c94196ed174fa682e29412bfaa2b"
 dependencies = [
  "auto_impl",
  "derive-where",
@@ -10569,7 +10577,7 @@ dependencies = [
 [[package]]
 name = "revm-inspector"
 version = "17.0.0"
-source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#184d8eafcac86bd12696a0adfaa4c0de9d0d7ec5"
+source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#15d02536c466c94196ed174fa682e29412bfaa2b"
 dependencies = [
  "auto_impl",
  "either",
@@ -10605,7 +10613,7 @@ dependencies = [
 [[package]]
 name = "revm-interpreter"
 version = "34.0.0"
-source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#184d8eafcac86bd12696a0adfaa4c0de9d0d7ec5"
+source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#15d02536c466c94196ed174fa682e29412bfaa2b"
 dependencies = [
  "revm-bytecode",
  "revm-context-interface",
@@ -10617,7 +10625,7 @@ dependencies = [
 [[package]]
 name = "revm-precompile"
 version = "32.1.0"
-source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#184d8eafcac86bd12696a0adfaa4c0de9d0d7ec5"
+source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#15d02536c466c94196ed174fa682e29412bfaa2b"
 dependencies = [
  "ark-bls12-381",
  "ark-bn254",
@@ -10636,12 +10644,13 @@ dependencies = [
  "ripemd",
  "secp256k1 0.31.1",
  "sha2",
+ "tracing",
 ]
 
 [[package]]
 name = "revm-primitives"
 version = "22.1.0"
-source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#184d8eafcac86bd12696a0adfaa4c0de9d0d7ec5"
+source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#15d02536c466c94196ed174fa682e29412bfaa2b"
 dependencies = [
  "alloy-primitives",
  "num_enum",
@@ -10652,7 +10661,7 @@ dependencies = [
 [[package]]
 name = "revm-state"
 version = "10.0.0"
-source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#184d8eafcac86bd12696a0adfaa4c0de9d0d7ec5"
+source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#15d02536c466c94196ed174fa682e29412bfaa2b"
 dependencies = [
  "alloy-eip7928",
  "bitflags 2.11.0",
@@ -11336,7 +11345,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e3bf829a2d51ab4a5ddf1352d8470c140cadc8301b2ae1789db023f01cedd6ba"
 dependencies = [
  "cfg-if",
- "cpufeatures",
+ "cpufeatures 0.2.17",
  "digest 0.10.7",
 ]
 
@@ -11347,7 +11356,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a7507d819769d01a365ab707794a4084392c824f54a7a6a7862f8c3d0892b283"
 dependencies = [
  "cfg-if",
- "cpufeatures",
+ "cpufeatures 0.2.17",
  "digest 0.10.7",
 ]
 
@@ -12845,9 +12854,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen"
-version = "0.2.115"
+version = "0.2.116"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6523d69017b7633e396a89c5efab138161ed5aafcbc8d3e5c5a42ae38f50495a"
+checksum = "7dc0882f7b5bb01ae8c5215a1230832694481c1a4be062fd410e12ea3da5b631"
 dependencies = [
  "cfg-if",
  "once_cell",
@@ -12858,9 +12867,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-futures"
-version = "0.4.65"
+version = "0.4.66"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2d1faf851e778dfa54db7cd438b70758eba9755cb47403f3496edd7c8fc212f0"
+checksum = "19280959e2844181895ef62f065c63e0ca07ece4771b53d89bfdb967d97cbf05"
 dependencies = [
  "js-sys",
  "wasm-bindgen",
@@ -12868,9 +12877,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-macro"
-version = "0.2.115"
+version = "0.2.116"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4e3a6c758eb2f701ed3d052ff5737f5bfe6614326ea7f3bbac7156192dc32e67"
+checksum = "75973d3066e01d035dbedaad2864c398df42f8dd7b1ea057c35b8407c015b537"
 dependencies = [
  "quote",
  "wasm-bindgen-macro-support",
@@ -12878,9 +12887,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-macro-support"
-version = "0.2.115"
+version = "0.2.116"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "921de2737904886b52bcbb237301552d05969a6f9c40d261eb0533c8b055fedf"
+checksum = "91af5e4be765819e0bcfee7322c14374dc821e35e72fa663a830bbc7dc199eac"
 dependencies = [
  "bumpalo",
  "proc-macro2",
@@ -12891,9 +12900,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-shared"
-version = "0.2.115"
+version = "0.2.116"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a93e946af942b58934c604527337bad9ae33ba1d5c6900bbb41c2c07c2364a93"
+checksum = "c9bf0406a78f02f336bf1e451799cca198e8acde4ffa278f0fb20487b150a633"
 dependencies = [
  "unicode-ident",
 ]
@@ -12961,9 +12970,9 @@ dependencies = [
 
 [[package]]
 name = "web-sys"
-version = "0.3.92"
+version = "0.3.93"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "84cde8507f4d7cfcb1185b8cb5890c494ffea65edbe1ba82cfd63661c805ed94"
+checksum = "749466a37ee189057f54748b200186b59a03417a117267baf3fd89cecc9fb837"
 dependencies = [
  "js-sys",
  "wasm-bindgen",
