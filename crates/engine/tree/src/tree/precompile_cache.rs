@@ -185,7 +185,7 @@ where
 
         let calldata = input.data;
         let result = self.precompile.call(input);
-        tracing::info!("result  gas from precompile: {:?}", result.as_ref().map(|o| o.gas).ok());
+        tracing::info!("result precompile: {:?}", result);
 
         match &result {
             Ok(output) => {
