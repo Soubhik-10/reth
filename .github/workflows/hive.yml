@@ -156,6 +156,8 @@ jobs:
             limit: .*tests/prague/eip6110_deposits/test_deposits*
           - sim: ethereum/eels/consume-engine
             limit: .*tests/prague/eip7002_el_triggerable_withdrawals/test_withdrawal_requests*
+          - sim: ethereum/eels/consume-engine
+            limit: .*tests/prague*
           # - sim: ethereum/eels/consume-engine
           #   limit: .*tests/cancun.*
           # - sim: ethereum/eels/consume-engine
