@@ -178,6 +178,8 @@ jobs:
             limit: .*tests/osaka/eip7934_block_rlp_limit/test_max_block_rlp_size*
           - sim: ethereum/eels/consume-engine
             limit: .*tests/osaka/eip7883_modexp_gas_increase/test_modexp_thresholds*
+          - sim: ethereum/eels/consume-engine
+            limit: .*tests/osaka/eip7883_modexp_gas_increase/test_modexp_thresholds::py::test_modexp_variable_gas_cost_exceed_tx_gas_cap[fork_Amsterdam*
 
           # consume-rlp
           - sim: ethereum/eels/consume-rlp
@@ -206,6 +208,8 @@ jobs:
             limit: .*tests/osaka/eip7934_block_rlp_limit/test_max_block_rlp_size*
           - sim: ethereum/eels/consume-rlp
             limit: .*tests/osaka/eip7883_modexp_gas_increase/test_modexp_thresholds*
+          - sim: ethereum/eels/consume-rlp
+            limit: .*tests/osaka/eip7883_modexp_gas_increase/test_modexp_thresholds::py::test_modexp_variable_gas_cost_exceed_tx_gas_cap[fork_Amsterdam*
     needs:
       - prepare-reth-stable
       - prepare-hive
