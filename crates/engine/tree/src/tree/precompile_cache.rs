@@ -83,7 +83,8 @@ pub struct CacheEntry<S> {
 }
 
 impl<S> CacheEntry<S> {
-    const fn regular_gas_used(&self) -> u64 {
+    fn regular_gas_used(&self) -> u64 {
+        tracing::info!("output gas in cache: {:#?}", self.output.gas);
         let regular_gas = self.output.gas.limit() - self.output.gas.remaining();
         regular_gas
     }
