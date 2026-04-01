@@ -1025,6 +1025,9 @@ where
 
         // Apply pre-execution changes (e.g., beacon root update)
         let pre_exec_start = Instant::now();
+        if has_bal {
+            executor.evm_mut().db_mut().bal_state.bal_builder = Some(Bal::new());
+        }
         debug_span!(target: "engine::tree", "pre_execution")
             .in_scope(|| executor.apply_pre_execution_changes())?;
         self.metrics.record_pre_execution(pre_exec_start.elapsed());
