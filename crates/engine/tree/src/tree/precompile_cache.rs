@@ -89,8 +89,13 @@ impl<S> CacheEntry<S> {
         regular_gas
     }
 
-    fn to_precompile_result(&self) -> PrecompileResultExt {
-        Ok(self.output.clone())
+    fn to_precompile_result(&self, gas_limit: u64, reservoir: u64) -> PrecompileResultExt {
+        let gas_used = self.regular_gas_used();
+        Ok(PrecompileOutputExt {
+            gas: GasTracker::new(gas_limit, gas_limit - gas_used, reservoir),
+            bytes: self.output.bytes.clone(),
+            reverted: self.output.reverted,
+        })
     }
 }
 
@@ -180,7 +185,7 @@ where
             tracing::info!("output gas limit: {}", entry.output.gas.limit());
             if input.gas >= entry.regular_gas_used() {
                 self.increment_by_one_precompile_cache_hits();
-                return entry.to_precompile_result();
+                return entry.to_precompile_result(input.gas, input.reservoir);
             }
         }
 
