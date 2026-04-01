@@ -86,16 +86,12 @@ impl<S> CacheEntry<S> {
     fn regular_gas_used(&self) -> u64 {
         tracing::info!("output gas in cache: {:#?}", self.output.gas);
         let regular_gas = self.output.gas.limit() - self.output.gas.remaining();
+        tracing::info!("regular gas used in cache: {regular_gas}");
         regular_gas
     }
 
-    fn to_precompile_result(&self, gas_limit: u64, reservoir: u64) -> PrecompileResultExt {
-        let gas_used = self.regular_gas_used();
-        Ok(PrecompileOutputExt {
-            gas: GasTracker::new(gas_limit, gas_limit - gas_used, reservoir),
-            bytes: self.output.bytes.clone(),
-            reverted: self.output.reverted,
-        })
+    fn to_precompile_result(&self) -> PrecompileResultExt {
+        Ok(self.output.clone())
     }
 }
 
@@ -136,6 +132,10 @@ where
         spec_id: S,
         metrics: Option<CachedPrecompileMetrics>,
     ) -> DynPrecompile {
+        tracing::info!("Wrapping precompile {:?} with cache", precompile.precompile_id());
+        tracing::info!("Cache spec id: {:?}", spec_id);
+        tracing::info!("Cache metrics: {:?}", metrics);
+        tracing::info!("Cache: {:?}", cache);
         let precompile_id = precompile.precompile_id().clone();
         let wrapped = Self::new(precompile, cache, spec_id, metrics);
         (precompile_id, move |input: PrecompileInput<'_>| -> PrecompileResultExt {
@@ -185,7 +185,7 @@ where
             tracing::info!("output gas limit: {}", entry.output.gas.limit());
             if input.gas >= entry.regular_gas_used() {
                 self.increment_by_one_precompile_cache_hits();
-                return entry.to_precompile_result(input.gas, input.reservoir);
+                return entry.to_precompile_result();
             }
         }
 
