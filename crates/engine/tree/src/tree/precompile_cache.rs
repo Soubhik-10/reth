@@ -9,7 +9,7 @@ use reth_evm::precompiles::{
     DynPrecompile, Precompile, PrecompileInput, PrecompileOutputExt, PrecompileResultExt,
 };
 use reth_primitives_traits::dashmap::DashMap;
-use revm::precompile::PrecompileId;
+use revm::{interpreter::gas::GasTracker, precompile::PrecompileId};
 use revm_primitives::Address;
 use std::{hash::Hash, sync::Arc};
 
