@@ -86,7 +86,7 @@ impl DefaultEngineValues {
 
     /// Set whether to disable prewarming by default
     pub const fn with_prewarming_disabled(mut self, v: bool) -> Self {
-        self.prewarming_disabled = v;
+        self.prewarming_disabled = true;
         self
     }
 
@@ -227,7 +227,7 @@ impl Default for DefaultEngineValues {
             memory_block_buffer_target: DEFAULT_MEMORY_BLOCK_BUFFER_TARGET,
             legacy_state_root_task_enabled: false,
             state_cache_disabled: false,
-            prewarming_disabled: false,
+            prewarming_disabled: true,
             state_provider_metrics: false,
             cross_block_cache_size: DEFAULT_CROSS_BLOCK_CACHE_SIZE_MB,
             state_root_task_compare_updates: false,
@@ -480,7 +480,7 @@ impl Default for EngineArgs {
             state_root_task_compare_updates,
             caching_and_prewarming_enabled: true,
             state_cache_disabled,
-            prewarming_disabled,
+            prewarming_disabled: true,
             parallel_sparse_trie_enabled: true,
             parallel_sparse_trie_disabled: false,
             state_provider_metrics,
@@ -521,7 +521,7 @@ impl EngineArgs {
             .with_memory_block_buffer_target(self.memory_block_buffer_target)
             .with_legacy_state_root(self.legacy_state_root_task_enabled)
             .without_state_cache(self.state_cache_disabled)
-            .without_prewarming(self.prewarming_disabled)
+            .without_prewarming(true) // self.prewarming_disabled)
             .with_state_provider_metrics(self.state_provider_metrics)
             .with_always_compare_trie_updates(self.state_root_task_compare_updates)
             .with_cross_block_cache_size(self.cross_block_cache_size * 1024 * 1024)

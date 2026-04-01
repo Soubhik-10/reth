@@ -973,6 +973,15 @@ where
             .in_scope(|| db.merge_transitions(BundleRetention::Reverts));
 
         let mut built_bal = None;
+
+        let output = BlockExecutionOutput { result, state: db.take_bundle() };
+        tracing::info!(target: "engine::tree::payload_validator", ?output, "Block execution completed, result {:?}", output.result);
+
+        let execution_duration = execution_start.elapsed();
+        self.metrics.record_block_execution(&output, execution_duration);
+        self.metrics.record_block_execution_gas_bucket(output.result.gas_used, execution_duration);
+        debug!(target: "engine::tree::payload_validator", elapsed = ?execution_duration, "Executed block");
+
         // Validate BAL hash if we executed with BAL tracking
         if has_bal {
             // Get the expected BAL from input and the built BAL from execution
@@ -982,13 +991,6 @@ where
             built_bal = db.take_built_alloy_bal();
             tracing::info!(target: "engine::tree::payload_validator", "Extracted BALs : expected = {:?}, built = {:?}", expected_bal, built_bal);
         }
-
-        let output = BlockExecutionOutput { result, state: db.take_bundle() };
-
-        let execution_duration = execution_start.elapsed();
-        self.metrics.record_block_execution(&output, execution_duration);
-        self.metrics.record_block_execution_gas_bucket(output.result.gas_used, execution_duration);
-        debug!(target: "engine::tree::payload_validator", elapsed = ?execution_duration, "Executed block");
 
         Ok((output, senders, built_bal, result_rx))
     }
