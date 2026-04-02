@@ -29,17 +29,6 @@ pub trait GetBlockAccessList: Trace + Call + LoadBlock {
                 .await?
                 .ok_or_else(|| EthApiError::HeaderNotFound(block_hash.into()))?;
 
-            // Check if the block has been pruned (EIP-4444)
-            let earliest_block = self.provider().earliest_block_number()?;
-            if block.header().number() < earliest_block {
-                return Err(EthApiError::PrunedHistoryUnavailable.into());
-            }
-            // Check if the block is pre-Amsterdam, as access lists are not available for those
-            // blocks
-            if !self.provider().chain_spec().is_amsterdam_active_at_timestamp(block.timestamp()) {
-                return Err(EthApiError::BlockAccessListNotAvailablePreAmsterdam.into());
-            }
-
             self.spawn_blocking_io(move |eth_api| {
                 let state = eth_api
                     .provider()
