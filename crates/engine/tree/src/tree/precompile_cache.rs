@@ -9,7 +9,7 @@ use reth_evm::precompiles::{
     DynPrecompile, Precompile, PrecompileInput, PrecompileOutputExt, PrecompileResultExt,
 };
 use reth_primitives_traits::dashmap::DashMap;
-use revm::precompile::PrecompileId;
+use revm::{interpreter::gas::GasTracker, precompile::PrecompileId};
 use revm_primitives::Address;
 use std::{hash::Hash, sync::Arc};
 
@@ -87,8 +87,13 @@ impl<S> CacheEntry<S> {
         self.output.gas.limit() - self.output.gas.remaining()
     }
 
-    fn to_precompile_result(&self) -> PrecompileResultExt {
-        Ok(self.output.clone())
+    fn to_precompile_result(&self, gas_limit: u64, reservoir: u64) -> PrecompileResultExt {
+        let gas_used = self.regular_gas_used();
+        Ok(PrecompileOutputExt {
+            gas: GasTracker::new(gas_limit, gas_limit - gas_used, reservoir),
+            bytes: self.output.bytes.clone(),
+            reverted: self.output.reverted,
+        })
     }
 }
 
@@ -175,7 +180,7 @@ where
             input.gas >= entry.regular_gas_used()
         {
             self.increment_by_one_precompile_cache_hits();
-            return entry.to_precompile_result();
+            return entry.to_precompile_result(input.gas, input.reservoir);
         }
 
         let calldata = input.data;

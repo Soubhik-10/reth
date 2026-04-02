@@ -781,7 +781,7 @@ revm-inspector = { git = "https://github.com/bluealloy/revm", rev = "0abb42b23" 
 revm-inspectors = { git = "https://github.com/paradigmxyz/revm-inspectors", rev = "24becc3" }
 
 # alloy-evm bal-devnet2 patches
-alloy-evm = { git = "https://github.com/Soubhik-10/evm", branch = "precompile-fix" }
+alloy-evm = { git = "https://github.com/Soubhik-10/evm", branch = "bal-devnet3" }
 
 # alloy bal-devnet2 patches
 alloy-consensus = { git = "https://github.com/alloy-rs/alloy", branch = "bal-devnet2" }
