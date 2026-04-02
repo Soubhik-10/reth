@@ -1,15 +1,14 @@
 //! Helpers for `eth_blockAccessList` RPC method.
 use alloy_consensus::BlockHeader;
 use alloy_eips::eip7928::BlockAccessList;
-use alloy_primitives::B256;
-use reth_chainspec::{ChainSpecProvider, EthereumHardforks};
+use alloy_rpc_types_eth::BlockId;
 use reth_errors::RethError;
 use reth_evm::{block::BlockExecutor, ConfigureEvm, Evm};
 use reth_revm::{database::StateProviderDatabase, State};
 use reth_rpc_eth_types::{
     cache::db::StateProviderTraitObjWrapper, error::FromEthApiError, EthApiError,
 };
-use reth_storage_api::{BlockNumReader, StateProviderFactory};
+use reth_storage_api::StateProviderFactory;
 
 use crate::{
     helpers::{Call, LoadBlock, Trace},
@@ -21,13 +20,13 @@ pub trait GetBlockAccessList: Trace + Call + LoadBlock {
     /// Retrieves the block access list for a block identified by its hash.
     fn get_block_access_list(
         &self,
-        block_hash: B256,
+        block_id: BlockId,
     ) -> impl Future<Output = Result<Option<BlockAccessList>, Self::Error>> + Send {
         async move {
             let block = self
-                .recovered_block(block_hash.into())
+                .recovered_block(block_id)
                 .await?
-                .ok_or_else(|| EthApiError::HeaderNotFound(block_hash.into()))?;
+                .ok_or_else(|| EthApiError::HeaderNotFound(block_id))?;
 
             self.spawn_blocking_io(move |eth_api| {
                 let state = eth_api
