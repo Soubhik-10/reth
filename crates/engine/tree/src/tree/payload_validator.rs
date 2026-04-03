@@ -860,7 +860,6 @@ where
             Vec<Address>,
             Option<BlockAccessList>,
             tokio::sync::oneshot::Receiver<(B256, alloy_primitives::Bloom)>,
-            Option<BlockAccessList>,
         ),
         InsertBlockErrorKind,
     >
