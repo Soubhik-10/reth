@@ -57,18 +57,6 @@ where
             gas_spent_by_tx: gas_spent_by_transactions(receipts),
         })
     }
-    // Validate that the block access list hash matches the calculated block access list hash
-    if chain_spec.is_amsterdam_active_at_timestamp(block.header().timestamp()) && allow_bal_check {
-        let block_bal_hash = block.header().block_access_list_hash().unwrap_or_default();
-        let default_bal = BlockAccessList::default();
-        let block_access_list_hash =
-            compute_block_access_list_hash(block_access_list.as_ref().unwrap_or(&default_bal));
-        if block_access_list_hash != block_bal_hash {
-            return Err(ConsensusError::BlockAccessListHashMismatch(
-                (block_access_list_hash, block_bal_hash).into(),
-            ))
-        }
-    }
 
     // Before Byzantium, receipts contained state root that would mean that expensive
     // operation as hashing that is required for state root got calculated in every
@@ -105,6 +93,19 @@ where
         if requests_hash != header_requests_hash {
             return Err(ConsensusError::BodyRequestsHashDiff(
                 GotExpected::new(requests_hash, header_requests_hash).into(),
+            ))
+        }
+    }
+
+    // Validate that the block access list hash matches the calculated block access list hash
+    if chain_spec.is_amsterdam_active_at_timestamp(block.header().timestamp()) && allow_bal_check {
+        let block_bal_hash = block.header().block_access_list_hash().unwrap_or_default();
+        let default_bal = BlockAccessList::default();
+        let block_access_list_hash =
+            compute_block_access_list_hash(block_access_list.as_ref().unwrap_or(&default_bal));
+        if block_access_list_hash != block_bal_hash {
+            return Err(ConsensusError::BlockAccessListHashMismatch(
+                (block_access_list_hash, block_bal_hash).into(),
             ))
         }
     }

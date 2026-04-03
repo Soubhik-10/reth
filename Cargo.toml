@@ -765,19 +765,19 @@ ipnet = "2.11"
 # =============================================================================
 
 # revm staging patches
-revm = { git = "https://github.com/bluealloy/revm", rev = "0abb42b23" }
+revm = { git = "https://github.com/bluealloy/revm", rev = "30e1c40" }
 # op-revm = { git = "https://github.com/bluealloy/revm", rev = "0abb42b23" }
-revm-bytecode = { git = "https://github.com/bluealloy/revm", rev = "0abb42b23" }
-revm-database = { git = "https://github.com/bluealloy/revm", rev = "0abb42b23" }
-revm-database-interface = { git = "https://github.com/bluealloy/revm", rev = "0abb42b23" }
-revm-state = { git = "https://github.com/bluealloy/revm", rev = "0abb42b23" }
-revm-primitives = { git = "https://github.com/bluealloy/revm", rev = "0abb42b23" }
-revm-interpreter = { git = "https://github.com/bluealloy/revm", rev = "0abb42b23" }
-revm-precompile = { git = "https://github.com/bluealloy/revm", rev = "0abb42b23" }
-revm-context = { git = "https://github.com/bluealloy/revm", rev = "0abb42b23" }
-revm-context-interface = { git = "https://github.com/bluealloy/revm", rev = "0abb42b23" }
-revm-handler = { git = "https://github.com/bluealloy/revm", rev = "0abb42b23" }
-revm-inspector = { git = "https://github.com/bluealloy/revm", rev = "0abb42b23" }
+revm-bytecode = { git = "https://github.com/bluealloy/revm", rev = "30e1c40" }
+revm-database = { git = "https://github.com/bluealloy/revm", rev = "30e1c40" }
+revm-database-interface = { git = "https://github.com/bluealloy/revm", rev = "30e1c40" }
+revm-state = { git = "https://github.com/bluealloy/revm", rev = "30e1c40" }
+revm-primitives = { git = "https://github.com/bluealloy/revm", rev = "30e1c40" }
+revm-interpreter = { git = "https://github.com/bluealloy/revm", rev = "30e1c40" }
+revm-precompile = { git = "https://github.com/bluealloy/revm", rev = "30e1c40" }
+revm-context = { git = "https://github.com/bluealloy/revm", rev = "30e1c40" }
+revm-context-interface = { git = "https://github.com/bluealloy/revm", rev = "30e1c40" }
+revm-handler = { git = "https://github.com/bluealloy/revm", rev = "30e1c40" }
+revm-inspector = { git = "https://github.com/bluealloy/revm", rev = "30e1c40" }
 revm-inspectors = { git = "https://github.com/paradigmxyz/revm-inspectors", rev = "24becc3" }
 
 # alloy-evm bal-devnet2 patches
