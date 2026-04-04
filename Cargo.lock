@@ -2021,7 +2021,7 @@ checksum = "dd5eb614ed4c27c5d706420e4320fbe3216ab31fa1c33cd8246ac36dae4479ba"
 dependencies = [
  "camino",
  "cargo-platform 0.1.9",
- "semver 1.0.27",
+ "semver 1.0.28",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -2035,7 +2035,7 @@ checksum = "ef987d17b0a113becdd19d3d0022d04d7ef41f9efe4f3fb63ac44ba61df3ade9"
 dependencies = [
  "camino",
  "cargo-platform 0.3.2",
- "semver 1.0.27",
+ "semver 1.0.28",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -10473,7 +10473,7 @@ dependencies = [
 [[package]]
 name = "revm"
 version = "36.0.0"
-source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#eee7ab82697081a3858a1c2b44bf2979b106350a"
+source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#88e0dc83b3ea5431964c6959c96ba5d71ad0e265"
 dependencies = [
  "revm-bytecode",
  "revm-context",
@@ -10491,7 +10491,7 @@ dependencies = [
 [[package]]
 name = "revm-bytecode"
 version = "9.0.0"
-source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#eee7ab82697081a3858a1c2b44bf2979b106350a"
+source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#88e0dc83b3ea5431964c6959c96ba5d71ad0e265"
 dependencies = [
  "bitvec",
  "phf",
@@ -10502,7 +10502,7 @@ dependencies = [
 [[package]]
 name = "revm-context"
 version = "15.0.0"
-source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#eee7ab82697081a3858a1c2b44bf2979b106350a"
+source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#88e0dc83b3ea5431964c6959c96ba5d71ad0e265"
 dependencies = [
  "bitvec",
  "cfg-if",
@@ -10518,7 +10518,7 @@ dependencies = [
 [[package]]
 name = "revm-context-interface"
 version = "16.0.0"
-source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#eee7ab82697081a3858a1c2b44bf2979b106350a"
+source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#88e0dc83b3ea5431964c6959c96ba5d71ad0e265"
 dependencies = [
  "alloy-eip2930",
  "alloy-eip7702",
@@ -10534,7 +10534,7 @@ dependencies = [
 [[package]]
 name = "revm-database"
 version = "12.0.0"
-source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#eee7ab82697081a3858a1c2b44bf2979b106350a"
+source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#88e0dc83b3ea5431964c6959c96ba5d71ad0e265"
 dependencies = [
  "alloy-eips",
  "revm-bytecode",
@@ -10547,7 +10547,7 @@ dependencies = [
 [[package]]
 name = "revm-database-interface"
 version = "10.0.0"
-source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#eee7ab82697081a3858a1c2b44bf2979b106350a"
+source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#88e0dc83b3ea5431964c6959c96ba5d71ad0e265"
 dependencies = [
  "auto_impl",
  "either",
@@ -10560,7 +10560,7 @@ dependencies = [
 [[package]]
 name = "revm-handler"
 version = "17.0.0"
-source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#eee7ab82697081a3858a1c2b44bf2979b106350a"
+source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#88e0dc83b3ea5431964c6959c96ba5d71ad0e265"
 dependencies = [
  "auto_impl",
  "derive-where",
@@ -10579,7 +10579,7 @@ dependencies = [
 [[package]]
 name = "revm-inspector"
 version = "17.0.0"
-source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#eee7ab82697081a3858a1c2b44bf2979b106350a"
+source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#88e0dc83b3ea5431964c6959c96ba5d71ad0e265"
 dependencies = [
  "auto_impl",
  "either",
@@ -10615,7 +10615,7 @@ dependencies = [
 [[package]]
 name = "revm-interpreter"
 version = "34.0.0"
-source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#eee7ab82697081a3858a1c2b44bf2979b106350a"
+source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#88e0dc83b3ea5431964c6959c96ba5d71ad0e265"
 dependencies = [
  "revm-bytecode",
  "revm-context-interface",
@@ -10627,7 +10627,7 @@ dependencies = [
 [[package]]
 name = "revm-precompile"
 version = "32.1.0"
-source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#eee7ab82697081a3858a1c2b44bf2979b106350a"
+source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#88e0dc83b3ea5431964c6959c96ba5d71ad0e265"
 dependencies = [
  "ark-bls12-381",
  "ark-bn254",
@@ -10652,7 +10652,7 @@ dependencies = [
 [[package]]
 name = "revm-primitives"
 version = "22.1.0"
-source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#eee7ab82697081a3858a1c2b44bf2979b106350a"
+source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#88e0dc83b3ea5431964c6959c96ba5d71ad0e265"
 dependencies = [
  "alloy-primitives",
  "num_enum",
@@ -10663,7 +10663,7 @@ dependencies = [
 [[package]]
 name = "revm-state"
 version = "10.0.0"
-source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#eee7ab82697081a3858a1c2b44bf2979b106350a"
+source = "git+https://github.com/Rimeeeeee/revm?branch=hive-fix#88e0dc83b3ea5431964c6959c96ba5d71ad0e265"
 dependencies = [
  "alloy-eip7928",
  "bitflags 2.11.0",
@@ -10894,7 +10894,7 @@ version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cfcb3a22ef46e85b45de6ee7e79d063319ebb6594faafcf1c225ea92ab6e9b92"
 dependencies = [
- "semver 1.0.27",
+ "semver 1.0.28",
 ]
 
 [[package]]
@@ -11179,9 +11179,9 @@ dependencies = [
 
 [[package]]
 name = "semver"
-version = "1.0.27"
+version = "1.0.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d767eb0aabc880b29956c35734170f26ed551a859dbd361d140cdbeca61ab1e2"
+checksum = "8a7852d02fc848982e0c167ef163aaff9cd91dc640ba85e263cb1ce46fae51cd"
 dependencies = [
  "serde",
  "serde_core",
@@ -12953,7 +12953,7 @@ dependencies = [
  "bitflags 2.11.0",
  "hashbrown 0.15.5",
  "indexmap 2.13.1",
- "semver 1.0.27",
+ "semver 1.0.28",
 ]
 
 [[package]]
@@ -13602,7 +13602,7 @@ dependencies = [
  "id-arena",
  "indexmap 2.13.1",
  "log",
- "semver 1.0.27",
+ "semver 1.0.28",
  "serde",
  "serde_derive",
  "serde_json",
