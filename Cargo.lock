@@ -286,7 +286,7 @@ dependencies = [
 [[package]]
 name = "alloy-evm"
 version = "0.29.2"
-source = "git+https://github.com/Soubhik-10/evm?branch=hive-test#b7fefdaba84e2606b5727413ebd52b6f61a209a3"
+source = "git+https://github.com/Soubhik-10/evm?branch=hive-test#3de0e824f87582b71b014f41b0604802669ac700"
 dependencies = [
  "alloy-consensus",
  "alloy-eips",
@@ -5602,9 +5602,9 @@ dependencies = [
 
 [[package]]
 name = "libz-sys"
-version = "1.1.25"
+version = "1.1.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d52f4c29e2a68ac30c9087e1b772dc9f44a2b66ed44edf2266cf2be9b03dafc1"
+checksum = "786a7c68b5bbe177567d237ec4940d11666206e97b20a983421b251092f24d7d"
 dependencies = [
  "cc",
  "libc",
