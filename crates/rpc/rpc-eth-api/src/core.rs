@@ -415,6 +415,10 @@ pub trait EthApi<
         &self,
         number: BlockNumberOrTag,
     ) -> RpcResult<Option<Value>>;
+
+    /// Returns the EIP-7928 block access list bytes for a block by number.
+    #[method(name = "getBlockAccessListRaw")]
+    async fn block_access_list_raw(&self, number: BlockNumberOrTag) -> RpcResult<Option<Bytes>>;
 }
 
 #[async_trait::async_trait]
@@ -935,5 +939,13 @@ where
             .map_err(|e| EthApiError::Internal(reth_errors::RethError::msg(e.to_string())))?;
 
         Ok(Some(json))
+    }
+    /// Handler for: `eth_getBlockAccessListRaw`
+    async fn block_access_list_raw(&self, number: BlockNumberOrTag) -> RpcResult<Option<Bytes>> {
+        trace!(target: "rpc::eth", ?number, "Serving eth_getBlockAccessListRaw");
+
+        let bal = self.get_block_access_list(number.into()).await?;
+        let encoded_bal = bal.map(|b| alloy_rlp::encode(b).into());
+        Ok(encoded_bal)
     }
 }
