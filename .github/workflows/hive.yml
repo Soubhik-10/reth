@@ -150,76 +150,49 @@ jobs:
             limit: .*tests/amsterdam/eip7928_block_level_access_lists/test_block_access_lists_opcodes*
           - sim: ethereum/eels/consume-engine
             limit: .*tests/amsterdam/eip8037_state_creation_gas_cost_increase/test_block_2d_gas_accounting*
-          # - sim: ethereum/eels/consume-engine
-          #   limit: .*tests/osaka.*
-          # - sim: ethereum/eels/consume-engine
-          #   limit: .*tests/prague/eip7702_set_code_tx/test_set_code_txs_2*
-          # - sim: ethereum/eels/consume-engine
-          #   limit: .*tests/prague/eip7685_general_purpose_el_requests/test_multi_type_requests*
-          # - sim: ethereum/eels/consume-engine
-          #   limit: .*tests/prague/eip6110_deposits/test_deposits*
-          # - sim: ethereum/eels/consume-engine
-          #   limit: .*tests/prague/eip7002_el_triggerable_withdrawals/test_withdrawal_requests*
-          # - sim: ethereum/eels/consume-engine
-          #   limit: .*tests/prague*
-          # - sim: ethereum/eels/consume-engine
-          #   limit: .*tests/cancun.*
-          # - sim: ethereum/eels/consume-engine
-          #   limit: .*tests/shanghai.*
-          # - sim: ethereum/eels/consume-engine
-          #   limit: .*tests/berlin.*
-          # - sim: ethereum/eels/consume-engine
-          #   limit: .*tests/istanbul.*
-          # - sim: ethereum/eels/consume-engine
-          #   limit: .*tests/homestead.*
-          # - sim: ethereum/eels/consume-engine
-          #   limit: .*tests/frontier.*
-          # - sim: ethereum/eels/consume-engine
-          #   limit: .*tests/paris.*
-          # - sim: ethereum/eels/consume-engine
-          #   limit: .*tests/frontier/validation/test_header.py::test_gas_limit_below_minimum*
           - sim: ethereum/eels/consume-engine
-            limit: .*tests/osaka/eip7934_block_rlp_limit/test_max_block_rlp_size*
-          # - sim: ethereum/eels/consume-engine
-          #   limit: .*tests/osaka/eip7883_modexp_gas_increase/test_modexp_thresholds*
-          # - sim: ethereum/eels/consume-engine
-          #   limit: .*tests/osaka/eip7883_modexp_gas_increase/test_modexp_thresholds.py::test_modexp_variable_gas_cost_exceed_tx_gas_cap[fork_Amsterdam*
-
+            limit: .*tests/osaka.*
+          - sim: ethereum/eels/consume-engine
+            limit: .*tests/prague*
+          - sim: ethereum/eels/consume-engine
+            limit: .*tests/cancun.*
+          - sim: ethereum/eels/consume-engine
+            limit: .*tests/shanghai.*
+          - sim: ethereum/eels/consume-engine
+            limit: .*tests/berlin.*
+          - sim: ethereum/eels/consume-engine
+            limit: .*tests/istanbul.*
+          - sim: ethereum/eels/consume-engine
+            limit: .*tests/homestead.*
+          - sim: ethereum/eels/consume-engine
+            limit: .*tests/frontier.*
+          - sim: ethereum/eels/consume-engine
+            limit: .*tests/paris.*
+          
           # consume-rlp
           - sim: ethereum/eels/consume-rlp
             limit: .*tests/amsterdam.*
           - sim: ethereum/eels/consume-rlp
-            limit: .*tests/amsterdam/eip7928_block_level_access_lists/test_block_access_lists_opcodes*
-          - sim: ethereum/eels/consume-rlp
             limit: .*tests/amsterdam/eip8037_state_creation_gas_cost_increase/test_block_2d_gas_accounting*
-          # - sim: ethereum/eels/consume-rlp
-          #   limit: .*tests/osaka.*
-          # - sim: ethereum/eels/consume-rlp
-          #   limit: .*tests/prague.*
-          # - sim: ethereum/eels/consume-rlp
-          #   limit: .*tests/cancun.*
-          # - sim: ethereum/eels/consume-rlp
-          #   limit: .*tests/shanghai.*
-          # - sim: ethereum/eels/consume-rlp
-          #   limit: .*tests/berlin.*
-          # - sim: ethereum/eels/consume-rlp
-          #   limit: .*tests/istanbul.*
-          # - sim: ethereum/eels/consume-rlp
-          #   limit: .*tests/homestead.*
-          # - sim: ethereum/eels/consume-rlp
-          #   limit: .*tests/frontier.*
-          # - sim: ethereum/eels/consume-rlp
-          #   limit: .*tests/paris.*
-          # - sim: ethereum/eels/consume-rlp
-          #   limit: .*tests/frontier/validation/test_header.py::test_gas_limit_below_minimum*
-          # - sim: ethereum/eels/consume-rlp
-          #   limit: .*tests/osaka/eip7934_block_rlp_limit/test_max_block_rlp_size*
-          # - sim: ethereum/eels/consume-rlp
-          #   limit: .*tests/osaka/eip7883_modexp_gas_increase/test_modexp_thresholds*
-          # - sim: ethereum/eels/consume-rlp
-          #   limit: .*tests/osaka/eip7883_modexp_gas_increase/test_modexp_thresholds.py::test_modexp_variable_gas_cost_exceed_tx_gas_cap[fork_Amsterdam*
           - sim: ethereum/eels/consume-rlp
-            limit: .*tests/osaka/eip7934_block_rlp_limit/test_max_block_rlp_size*
+            limit: .*tests/osaka.*
+          - sim: ethereum/eels/consume-rlp
+            limit: .*tests/prague.*
+          - sim: ethereum/eels/consume-rlp
+            limit: .*tests/cancun.*
+          - sim: ethereum/eels/consume-rlp
+            limit: .*tests/shanghai.*
+          - sim: ethereum/eels/consume-rlp
+            limit: .*tests/berlin.*
+          - sim: ethereum/eels/consume-rlp
+            limit: .*tests/istanbul.*
+          - sim: ethereum/eels/consume-rlp
+            limit: .*tests/homestead.*
+          - sim: ethereum/eels/consume-rlp
+            limit: .*tests/frontier.*
+          - sim: ethereum/eels/consume-rlp
+            limit: .*tests/paris.*
+          
     needs:
       - prepare-reth-stable
       - prepare-hive
