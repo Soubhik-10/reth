@@ -97,7 +97,9 @@ where
     }
 
     // Validate that the block access list hash matches the calculated block access list hash
-    if chain_spec.is_amsterdam_active_at_timestamp(block.header().timestamp()) {
+    if chain_spec.is_amsterdam_active_at_timestamp(block.header().timestamp()) &&
+        block_access_list.is_some()
+    {
         let block_bal_hash = block.header().block_access_list_hash().unwrap_or_default();
         let default_bal = BlockAccessList::default();
         let block_access_list_hash =

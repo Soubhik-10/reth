@@ -575,6 +575,16 @@ impl<F, DB: Database> BasicBlockExecutor<F, DB> {
             .build();
         Self { strategy_factory, db }
     }
+
+    /// Creates a new `BasicBlockExecutor` with the given strategy and bal if enabled.
+    pub fn new_with_bal(strategy_factory: F, db: DB, has_bal: bool) -> Self {
+        let db = State::builder()
+            .with_database(db)
+            .with_bundle_update()
+            .with_bal_builder_if(has_bal)
+            .build();
+        Self { strategy_factory, db }
+    }
 }
 
 impl<F, DB> Executor<DB> for BasicBlockExecutor<F, DB>
