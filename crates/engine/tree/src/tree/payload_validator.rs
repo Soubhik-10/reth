@@ -1399,7 +1399,7 @@ where
         if built_bal.is_some() {
             let bal_bytes: alloy_primitives::Bytes =
                 alloy_rlp::encode(built_bal.unwrap_or_default()).into();
-            let _ = self.provider.insert(input.hash(), input.num_hash().number, bal_bytes);
+            let _ = self.provider.insert(block.hash(), block.num_hash().number, bal_bytes);
         }
         drop(_enter);
 
