@@ -1389,7 +1389,7 @@ where
             block,
             output,
             receipt_root_bloom,
-            built_bal,
+            built_bal.clone(),
             true,
         ) {
             // call post-block hook
