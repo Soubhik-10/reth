@@ -1388,7 +1388,6 @@ where
             output,
             receipt_root_bloom,
             built_bal,
-            true,
         ) {
             // call post-block hook
             self.on_invalid_block(parent_block, block, output, None, ctx.state_mut());

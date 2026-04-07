@@ -258,7 +258,6 @@ fn run_case(case: &BlockchainTest) -> Result<(), Error> {
             &output.requests,
             None,
             &None, // Todo Bal
-            false,
             Some(output.gas_used),
         )
         .map_err(|err| Error::block_failed(block_number, err))?;
