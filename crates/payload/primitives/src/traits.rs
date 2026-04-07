@@ -190,24 +190,24 @@ impl PayloadAttributes for EthPayloadAttributes {
     }
 }
 
-#[cfg(feature = "op")]
-impl PayloadAttributes for op_alloy_rpc_types_engine::OpPayloadAttributes {
-    fn timestamp(&self) -> u64 {
-        self.payload_attributes.timestamp
-    }
+// #[cfg(feature = "op")]
+// impl PayloadAttributes for op_alloy_rpc_types_engine::OpPayloadAttributes {
+//     fn timestamp(&self) -> u64 {
+//         self.payload_attributes.timestamp
+//     }
 
-    fn withdrawals(&self) -> Option<&Vec<Withdrawal>> {
-        self.payload_attributes.withdrawals.as_ref()
-    }
+//     fn withdrawals(&self) -> Option<&Vec<Withdrawal>> {
+//         self.payload_attributes.withdrawals.as_ref()
+//     }
 
-    fn parent_beacon_block_root(&self) -> Option<B256> {
-        self.payload_attributes.parent_beacon_block_root
-    }
+//     fn parent_beacon_block_root(&self) -> Option<B256> {
+//         self.payload_attributes.parent_beacon_block_root
+//     }
 
-    fn slot_number(&self) -> Option<u64> {
-        None
-    }
-}
+//     fn slot_number(&self) -> Option<u64> {
+//         None
+//     }
+// }
 
 /// Factory trait for creating payload attributes.
 ///

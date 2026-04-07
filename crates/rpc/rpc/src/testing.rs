@@ -19,7 +19,7 @@ use alloy_eips::eip2718::Decodable2718;
 use alloy_evm::{Evm, RecoveredTx};
 use alloy_primitives::{map::HashSet, Address, U256};
 use alloy_rlp::Encodable;
-use alloy_rpc_types_engine::ExecutionPayloadEnvelopeV5;
+use alloy_rpc_types_engine::{ExecutionPayloadEnvelopeV5, ExecutionPayloadEnvelopeV6};
 use async_trait::async_trait;
 use jsonrpsee::core::RpcResult;
 use reth_chainspec::{ChainSpecProvider, EthereumHardforks};
@@ -49,12 +49,14 @@ pub struct TestingApi<Eth, Evm> {
     evm_config: Evm,
     /// If true, skip invalid transactions instead of failing.
     skip_invalid_transactions: bool,
+    /// If set, override the parent block's gas limit in `testing_buildBlockV1`.
+    gas_limit_override: Option<u64>,
 }
 
 impl<Eth, Evm> TestingApi<Eth, Evm> {
     /// Create a new testing API handler.
     pub const fn new(eth_api: Eth, evm_config: Evm) -> Self {
-        Self { eth_api, evm_config, skip_invalid_transactions: false }
+        Self { eth_api, evm_config, skip_invalid_transactions: false, gas_limit_override: None }
     }
 
     /// Enable skipping invalid transactions instead of failing.
@@ -62,6 +64,13 @@ impl<Eth, Evm> TestingApi<Eth, Evm> {
     /// skipped.
     pub const fn with_skip_invalid_transactions(mut self) -> Self {
         self.skip_invalid_transactions = true;
+        self
+    }
+
+    /// Override the gas limit used by `testing_buildBlockV1` instead of inheriting from the
+    /// parent block.
+    pub const fn with_gas_limit_override(mut self, gas_limit: u64) -> Self {
+        self.gas_limit_override = Some(gas_limit);
         self
     }
 }
@@ -74,19 +83,23 @@ where
     Evm: ConfigureEvm<NextBlockEnvCtx = NextBlockEnvAttributes, Primitives = EthPrimitives>
         + 'static,
 {
-    async fn build_block_v1(
+    async fn build_block(
         &self,
         request: TestingBuildBlockRequestV1,
-    ) -> Result<ExecutionPayloadEnvelopeV5, Eth::Error> {
+        is_bal_enabled: bool,
+    ) -> Result<EthBuiltPayload, Eth::Error> {
         let evm_config = self.evm_config.clone();
         let skip_invalid_transactions = self.skip_invalid_transactions;
+        let gas_limit_override = self.gas_limit_override;
         self.eth_api
             .spawn_with_state_at_block(request.parent_block_hash, move |eth_api, state| {
                 let state = state.database.0;
                 let mut db = State::builder()
                     .with_bundle_update()
                     .with_database(StateProviderDatabase::new(&state))
+                    .with_bal_builder_if(is_bal_enabled)
                     .build();
+
                 let parent = eth_api
                     .provider()
                     .sealed_header_by_hash(request.parent_block_hash)?
@@ -105,18 +118,22 @@ where
                     timestamp: request.payload_attributes.timestamp,
                     suggested_fee_recipient: request.payload_attributes.suggested_fee_recipient,
                     prev_randao: request.payload_attributes.prev_randao,
-                    gas_limit: parent.gas_limit(),
+                    gas_limit: gas_limit_override.unwrap_or_else(|| parent.gas_limit()),
                     parent_beacon_block_root: request.payload_attributes.parent_beacon_block_root,
                     withdrawals: withdrawals.map(Into::into),
                     extra_data: request.extra_data.unwrap_or_default(),
-                    slot_number: None,
+                    slot_number: request.payload_attributes.slot_number,
                 };
 
                 let mut builder = evm_config
                     .builder_for_next_block(&mut db, &parent, env_attrs)
                     .map_err(RethError::other)
                     .map_err(Eth::Error::from_eth_err)?;
+
                 builder.apply_pre_execution_changes().map_err(Eth::Error::from_eth_err)?;
+                if is_bal_enabled {
+                    builder.evm_mut().db_mut().bump_bal_index();
+                }
 
                 let mut total_fees = U256::ZERO;
                 let base_fee = builder.evm_mut().block().basefee();
@@ -195,6 +212,9 @@ where
 
                     block_transactions_rlp_length += tx_rlp_len;
                     total_fees += U256::from(tip) * U256::from(gas_used);
+                    if is_bal_enabled {
+                        builder.evm_mut().db_mut().bump_bal_index();
+                    }
                 }
                 let outcome = builder.finish(&state).map_err(Eth::Error::from_eth_err)?;
 
@@ -203,18 +223,39 @@ where
 
                 let requests = has_requests.then_some(outcome.execution_result.requests);
 
-                EthBuiltPayload::new(
+                let bal = if is_bal_enabled { db.take_built_alloy_bal() } else { None };
+
+                Ok(EthBuiltPayload::new(
                     alloy_rpc_types_engine::PayloadId::default(),
                     sealed_block,
                     total_fees,
                     requests,
-                    None,
-                )
-                .try_into_v5()
-                .map_err(RethError::other)
-                .map_err(Eth::Error::from_eth_err)
+                    bal,
+                ))
             })
             .await
+    }
+
+    async fn build_block_v1(
+        &self,
+        request: TestingBuildBlockRequestV1,
+    ) -> Result<ExecutionPayloadEnvelopeV5, Eth::Error> {
+        self.build_block(request, false)
+            .await?
+            .try_into_v5()
+            .map_err(RethError::other)
+            .map_err(Eth::Error::from_eth_err)
+    }
+
+    async fn build_block_v2(
+        &self,
+        request: TestingBuildBlockRequestV1,
+    ) -> Result<ExecutionPayloadEnvelopeV6, Eth::Error> {
+        self.build_block(request, true)
+            .await?
+            .try_into_v6()
+            .map_err(RethError::other)
+            .map_err(Eth::Error::from_eth_err)
     }
 }
 
@@ -234,5 +275,14 @@ where
         request: TestingBuildBlockRequestV1,
     ) -> RpcResult<ExecutionPayloadEnvelopeV5> {
         self.build_block_v1(request).await.map_err(Into::into)
+    }
+
+    /// Handles `testing_buildBlockV2` by gating concurrency via a semaphore and offloading heavy
+    /// work to the blocking pool to avoid stalling the async runtime.
+    async fn build_block_v2(
+        &self,
+        request: TestingBuildBlockRequestV1,
+    ) -> RpcResult<ExecutionPayloadEnvelopeV6> {
+        self.build_block_v2(request).await.map_err(Into::into)
     }
 }

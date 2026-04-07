@@ -4,7 +4,9 @@
 
 use alloy_evm::{
     eth::EthEvmContext,
-    precompiles::{DynPrecompile, Precompile, PrecompileInput, PrecompilesMap},
+    precompiles::{
+        DynPrecompile, Precompile, PrecompileInput, PrecompileResultExt, PrecompilesMap,
+    },
     revm::{handler::EthPrecompiles, precompile::PrecompileId},
     Evm, EvmFactory,
 };
@@ -20,7 +22,6 @@ use reth_ethereum::{
             context_interface::result::{EVMError, HaltReason},
             inspector::{Inspector, NoOpInspector},
             interpreter::interpreter::EthInterpreter,
-            precompile::PrecompileResult,
             primitives::hardfork::SpecId,
             MainBuilder, MainContext,
         },
@@ -41,7 +42,7 @@ use schnellru::{ByLength, LruMap};
 use std::sync::Arc;
 
 /// Type alias for the LRU cache used within the [`PrecompileCache`].
-type PrecompileLRUCache = LruMap<(Bytes, u64), PrecompileResult>;
+type PrecompileLRUCache = LruMap<(Bytes, u64), PrecompileResultExt>;
 
 /// A cache for precompile inputs / outputs.
 ///
@@ -121,7 +122,7 @@ impl WrappedPrecompile {
     fn wrap(precompile: DynPrecompile, cache: Arc<RwLock<PrecompileCache>>) -> DynPrecompile {
         let precompile_id = precompile.precompile_id().clone();
         let wrapped = Self::new(precompile, cache);
-        (precompile_id, move |input: PrecompileInput<'_>| -> PrecompileResult {
+        (precompile_id, move |input: PrecompileInput<'_>| -> PrecompileResultExt {
             wrapped.call(input)
         })
             .into()
@@ -133,7 +134,7 @@ impl Precompile for WrappedPrecompile {
         self.precompile.precompile_id()
     }
 
-    fn call(&self, input: PrecompileInput<'_>) -> PrecompileResult {
+    fn call(&self, input: PrecompileInput<'_>) -> PrecompileResultExt {
         let mut cache = self.cache.write();
         let key = (Bytes::copy_from_slice(input.data), input.gas);
 
@@ -163,7 +164,7 @@ pub struct MyExecutorBuilder {
 impl Default for MyExecutorBuilder {
     fn default() -> Self {
         let precompile_cache = PrecompileCache {
-            cache: LruMap::<(Bytes, u64), PrecompileResult>::new(ByLength::new(100)),
+            cache: LruMap::<(Bytes, u64), PrecompileResultExt>::new(ByLength::new(100)),
         };
         Self { precompile_cache: Arc::new(RwLock::new(precompile_cache)) }
     }

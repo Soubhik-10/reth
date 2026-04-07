@@ -6,7 +6,7 @@ use alloy_primitives::{
 use fixed_cache::{AnyRef, CacheConfig, Stats, StatsHandler};
 use metrics::{Counter, Gauge, Histogram};
 use parking_lot::Once;
-use reth_errors::ProviderResult;
+use reth_errors::{ProviderError, ProviderResult};
 use reth_metrics::Metrics;
 use reth_primitives_traits::{Account, Bytecode};
 use reth_provider::{
@@ -18,7 +18,6 @@ use reth_trie::{
     updates::TrieUpdates, AccountProof, HashedPostState, HashedStorage, MultiProof,
     MultiProofTargets, StorageMultiProof, StorageProof, TrieInput,
 };
-use revm_primitives::eip7907::MAX_CODE_SIZE;
 use std::{
     sync::{
         atomic::{AtomicU64, AtomicUsize, Ordering},
@@ -55,8 +54,17 @@ const fn fixed_cache_key_size_with_value<K>(value: usize) -> usize {
     raw_size.div_ceil(FIXED_CACHE_ALIGNMENT) * FIXED_CACHE_ALIGNMENT
 }
 
-/// Size in bytes of a single code cache entry.
-const CODE_CACHE_ENTRY_SIZE: usize = fixed_cache_key_size_with_value::<Address>(MAX_CODE_SIZE);
+/// Estimated average bytecode size for cache budget calculation.
+///
+/// The fixed-cache stores `Option<Bytecode>` inline (pointer-sized), but each cached contract
+/// also holds bytecode on the heap. For budget estimation we use 8 KiB, which is close to the
+/// observed mainnet average (~7 KiB). Using `MAX_CODE_SIZE` (48 KiB) overestimates by ~7x,
+/// yielding only 4096 entries for a 228 MB code-cache budget when 16384 fit comfortably.
+const ESTIMATED_AVG_CODE_SIZE: usize = 8 * 1024;
+
+/// Size in bytes of a single code cache entry (inline metadata + estimated heap).
+const CODE_CACHE_ENTRY_SIZE: usize =
+    fixed_cache_key_size_with_value::<Address>(ESTIMATED_AVG_CODE_SIZE);
 
 /// Size in bytes of a single storage cache entry.
 const STORAGE_CACHE_ENTRY_SIZE: usize =
@@ -458,6 +466,55 @@ impl<S: StateProvider, const PREWARM: bool> StateProvider for CachedStateProvide
             self.state_provider.storage(account, storage_key)
         }
     }
+
+    fn storage_range(
+        &self,
+        account: Address,
+        keys: &[StorageKey],
+    ) -> ProviderResult<Vec<(StorageKey, StorageValue)>> {
+        let mut uncached_keys = Vec::new();
+        let mut result = Vec::with_capacity(keys.len());
+
+        for &key in keys {
+            if let Some(value) = self.caches.get_storage(account, key) {
+                if !value.is_zero() {
+                    result.push((key, value));
+                }
+            } else {
+                uncached_keys.push(key);
+            }
+        }
+
+        // Batch-fetch all uncached keys from the inner provider
+        if !uncached_keys.is_empty() {
+            let mut fetched = self.state_provider.storage_range(account, &uncached_keys)?;
+            // Sort by raw key to align with uncached_keys for the merge-join below.
+            // The inner provider may return results in a different order (e.g. hashed state
+            // iterates by hashed slot).
+            fetched.sort_unstable_by_key(|(k, _)| *k);
+            // Merge-join to find zero slots without allocating a HashSet.
+            let mut fetched_iter = fetched.iter();
+            let mut next = fetched_iter.next();
+            for &key in &uncached_keys {
+                if let Some(&(fk, fv)) = next &&
+                    fk == key
+                {
+                    let _ = self.caches.get_or_try_insert_storage_with(account, key, || {
+                        Ok::<_, ProviderError>(fv)
+                    });
+                    result.push((key, fv));
+                    next = fetched_iter.next();
+                    continue;
+                }
+                // key not returned by inner provider → zero slot
+                let _ = self.caches.get_or_try_insert_storage_with(account, key, || {
+                    Ok::<_, ProviderError>(StorageValue::ZERO)
+                });
+            }
+        }
+
+        Ok(result)
+    }
 }
 
 impl<S: BytecodeReader, const PREWARM: bool> BytecodeReader for CachedStateProvider<S, PREWARM> {
@@ -748,6 +805,11 @@ impl ExecutionCache {
         }
     }
 
+    /// Returns a cached storage value if present, without inserting.
+    pub fn get_storage(&self, address: Address, key: StorageKey) -> Option<StorageValue> {
+        self.0.storage_cache.get(&(address, key))
+    }
+
     /// Insert storage value into cache.
     pub fn insert_storage(&self, address: Address, key: StorageKey, value: Option<StorageValue>) {
         self.0.storage_cache.insert((address, key), value.unwrap_or_default());
@@ -963,8 +1025,10 @@ impl SavedCache {
         self.caches.update_metrics(&self.metrics);
     }
 
-    /// Clears all caches, resetting them to empty state.
-    pub(crate) fn clear(&self) {
+    /// Clears all caches, resetting them to empty state,
+    /// and updates the hash of the block this cache belongs to.
+    pub(crate) fn clear_with_hash(&mut self, hash: B256) {
+        self.hash = hash;
         self.caches.clear();
     }
 }
@@ -1210,5 +1274,21 @@ mod tests {
         // Verify only addr1 was removed
         assert!(caches.0.account_cache.get(&addr1).is_none());
         assert!(caches.0.account_cache.get(&addr2).is_some());
+    }
+
+    #[test]
+    fn test_code_cache_capacity_with_default_budget() {
+        // Default cross-block cache is 4 GB; code gets 5.56% = ~228 MB.
+        let total_cache_size = 4 * 1024 * 1024 * 1024; // 4 GB
+        let code_budget = (total_cache_size * 556) / 10000; // 228 MB
+
+        let capacity = ExecutionCache::bytes_to_entries(code_budget, CODE_CACHE_ENTRY_SIZE);
+
+        // With ESTIMATED_AVG_CODE_SIZE (8 KiB) we expect 16384 entries.
+        // If someone accidentally reverts to MAX_CODE_SIZE (48 KiB), this would drop to 4096.
+        assert_eq!(
+            capacity, 16384,
+            "code cache should have 16384 entries with default 4 GB budget"
+        );
     }
 }

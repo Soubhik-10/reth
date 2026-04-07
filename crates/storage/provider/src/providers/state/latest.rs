@@ -11,7 +11,7 @@ use reth_storage_errors::provider::{ProviderError, ProviderResult};
 use reth_trie::{
     hashed_cursor::HashedPostStateCursorFactory,
     proof::{Proof, StorageProof},
-    trie_cursor::{masked::MaskedTrieCursorFactory, InMemoryTrieCursorFactory},
+    trie_cursor::InMemoryTrieCursorFactory,
     updates::TrieUpdates,
     witness::TrieWitness,
     AccountProof, HashedPostState, HashedStorage, KeccakKeyHasher, MultiProof, MultiProofTargets,
@@ -223,18 +223,16 @@ impl<Provider: DBProvider + StorageSettingsCache> StateProofProvider
             let nodes_sorted = input.nodes.into_sorted();
             let state_sorted = input.state.into_sorted();
             Ok(TrieWitness::new(
-                MaskedTrieCursorFactory::new(
-                    InMemoryTrieCursorFactory::new(
-                        reth_trie_db::DatabaseTrieCursorFactory::<_, A>::new(self.tx()),
-                        &nodes_sorted,
-                    ),
-                    input.prefix_sets.freeze(),
+                InMemoryTrieCursorFactory::new(
+                    reth_trie_db::DatabaseTrieCursorFactory::<_, A>::new(self.tx()),
+                    &nodes_sorted,
                 ),
                 HashedPostStateCursorFactory::new(
                     reth_trie_db::DatabaseHashedCursorFactory::new(self.tx()),
                     &state_sorted,
                 ),
             )
+            .with_prefix_sets_mut(input.prefix_sets)
             .always_include_root_node()
             .compute(target)?
             .into_values()
@@ -272,6 +270,44 @@ impl<Provider: DBProvider + BlockHashReader + StorageSettingsCache> StateProvide
             }
             Ok(None)
         }
+    }
+
+    fn storage_range(
+        &self,
+        account: Address,
+        keys: &[StorageKey],
+    ) -> ProviderResult<Vec<(StorageKey, StorageValue)>> {
+        let mut result = Vec::with_capacity(keys.len());
+        if keys.is_empty() {
+            return Ok(result);
+        }
+
+        if self.0.cached_storage_settings().use_hashed_state() {
+            let hashed_address = alloy_primitives::keccak256(account);
+            let mut cursor = self.tx().cursor_dup_read::<tables::HashedStorages>()?;
+            // Sort by hashed slot so cursor seeks are sequential (forward-only).
+            let mut hashed_keys: Vec<(B256, StorageKey)> =
+                keys.iter().map(|&k| (alloy_primitives::keccak256(k), k)).collect();
+            hashed_keys.sort_unstable_by_key(|(h, _)| *h);
+            for (hashed_slot, original_key) in hashed_keys {
+                if let Some(entry) = cursor.seek_by_key_subkey(hashed_address, hashed_slot)? &&
+                    entry.key == hashed_slot
+                {
+                    result.push((original_key, entry.value));
+                }
+            }
+        } else {
+            let mut cursor = self.tx().cursor_dup_read::<tables::PlainStorageState>()?;
+            for &key in keys {
+                if let Some(entry) = cursor.seek_by_key_subkey(account, key)? &&
+                    entry.key == key
+                {
+                    result.push((key, entry.value));
+                }
+            }
+        }
+
+        Ok(result)
     }
 }
 

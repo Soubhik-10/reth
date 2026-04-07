@@ -47,6 +47,9 @@ pub enum EthSimulateError {
     /// Total gas limit of transactions for the block exceeds the block gas limit.
     #[error("Block gas limit exceeded by the block's transactions")]
     BlockGasLimitExceeded,
+    /// Number of simulated blocks exceeds the configured client limit.
+    #[error("too many blocks")]
+    TooManyBlocks,
     /// Max gas limit for entire operation exceeded.
     #[error("Client adjustable limit reached")]
     GasLimitReached,
@@ -116,7 +119,7 @@ impl EthSimulateError {
             Self::BlockTimestampInvalid { .. } => -38021,
             Self::SenderNotEOA => -38024,
             Self::MaxInitCodeSizeExceeded => -38025,
-            Self::GasLimitReached => -38026,
+            Self::TooManyBlocks | Self::GasLimitReached => -38026,
             Self::NotAPrecompile(_) => -32000,
         }
     }
@@ -311,7 +314,7 @@ where
                         code: SIMULATE_VM_ERROR_CODE,
                         ..SimulateError::invalid_params()
                     }),
-                    gas_used: gas.used(),
+                    gas_used: gas.tx_gas_used(),
                     logs: Vec::new(),
                     status: false,
                     ..Default::default()
@@ -327,7 +330,7 @@ where
                         code: SIMULATE_REVERT_CODE,
                         ..SimulateError::invalid_params()
                     }),
-                    gas_used: gas.used(),
+                    gas_used: gas.tx_gas_used(),
                     status: false,
                     logs: Vec::new(),
                     ..Default::default()
@@ -339,7 +342,7 @@ where
                 SimCallResult {
                     return_data: output.into_data(),
                     error: None,
-                    gas_used: gas.used(),
+                    gas_used: gas.tx_gas_used(),
                     logs: logs
                         .into_iter()
                         .map(|log| {

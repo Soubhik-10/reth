@@ -530,7 +530,7 @@ where
         // The receipt root task is spawned before execution and receives receipts incrementally
         // as transactions complete, allowing parallel computation during execution.
         let execute_block_start = Instant::now();
-        let (output, senders, receipt_root_rx) =
+        let (output, senders, receipt_root_rx, built_bal) =
             match self.execute_block(state_provider, env, &input, &mut handle) {
                 Ok(output) => output,
                 Err(err) => return self.handle_execution_error(input, err, &parent_block),
@@ -611,6 +611,7 @@ where
                 &mut ctx,
                 transaction_root,
                 receipt_root_bloom,
+                built_bal,
                 hashed_state,
             ),
             block
@@ -860,6 +861,7 @@ where
             BlockExecutionOutput<N::Receipt>,
             Vec<Address>,
             tokio::sync::oneshot::Receiver<(B256, alloy_primitives::Bloom)>,
+            Option<BlockAccessList>,
         ),
         InsertBlockErrorKind,
     >
@@ -971,34 +973,8 @@ where
         debug_span!(target: "engine::tree", "merge_transitions")
             .in_scope(|| db.merge_transitions(BundleRetention::Reverts));
 
-        // Validate BAL hash if we executed with BAL tracking
-        if has_bal {
-            // Get the expected BAL from input and the built BAL from execution
-            let expected_bal =
-                input.block_access_list().transpose().map_err(BlockExecutionError::other)?;
-
-            let built_bal = db.take_built_alloy_bal();
-
-            // Compute hashes and compare
-            let expected_hash = expected_bal
-                .as_ref()
-                .map(|bal| alloy_eips::eip7928::compute_block_access_list_hash(bal));
-
-            let built_hash = built_bal
-                .as_ref()
-                .map(|bal| alloy_eips::eip7928::compute_block_access_list_hash(bal));
-
-            if let (Some(expected), Some(got)) = (expected_hash, built_hash) &&
-                expected != got
-            {
-                return Err(InsertBlockErrorKind::Consensus(
-                    ConsensusError::BlockAccessListHashMismatch((got, expected).into()),
-                ));
-            }
-            let bal_bytes: alloy_primitives::Bytes =
-                alloy_rlp::encode(built_bal.unwrap_or_default()).into();
-            let _ = self.provider.insert(input.hash(), input.num_hash().number, bal_bytes);
-        }
+        // Extract the built bal is payload has bal
+        let built_bal = if has_bal { db.take_built_alloy_bal() } else { None };
 
         let output = BlockExecutionOutput { result, state: db.take_bundle() };
 
@@ -1007,7 +983,7 @@ where
         self.metrics.record_block_execution_gas_bucket(output.result.gas_used, execution_duration);
         debug!(target: "engine::tree::payload_validator", elapsed = ?execution_duration, "Executed block");
 
-        Ok((output, senders, result_rx))
+        Ok((output, senders, result_rx, built_bal))
     }
 
     /// Executes transactions and collects senders, streaming receipts to a background task.
@@ -1072,12 +1048,14 @@ where
             let _enter = debug_span!(
                 target: "engine::tree",
                 "execute tx",
+                tx_index = senders.len() - 1,
             )
             .entered();
             trace!(target: "engine::tree", "Executing transaction");
 
             let tx_start = Instant::now();
             executor.execute_transaction(tx)?;
+
             self.metrics.record_transaction_execution(tx_start.elapsed());
 
             // advance the shared counter so prewarm workers skip already-executed txs
@@ -1379,6 +1357,7 @@ where
         ctx: &mut TreeCtx<'_, N>,
         transaction_root: Option<B256>,
         receipt_root_bloom: Option<ReceiptRootBloom>,
+        built_bal: Option<BlockAccessList>,
         hashed_state: LazyHashedPostState,
     ) -> Result<LazyHashedPostState, InsertBlockErrorKind>
     where
@@ -1410,12 +1389,17 @@ where
             block,
             output,
             receipt_root_bloom,
-            None,
-            false,
+            built_bal,
+            true,
         ) {
             // call post-block hook
             self.on_invalid_block(parent_block, block, output, None, ctx.state_mut());
             return Err(err.into())
+        }
+        if built_bal.is_some() {
+            let bal_bytes: alloy_primitives::Bytes =
+                alloy_rlp::encode(built_bal.unwrap_or_default()).into();
+            let _ = self.provider.insert(input.hash(), input.num_hash().number, bal_bytes);
         }
         drop(_enter);
 

@@ -3,7 +3,7 @@
 # 
 # We'll use cargo-chef to speed up the build
 # 
-FROM lukemathwalker/cargo-chef:latest-rust-trixie AS chef
+FROM lukemathwalker/cargo-chef:latest-rust-1.94.0-trixie AS chef
 WORKDIR /app
 
 # Install system dependencies
