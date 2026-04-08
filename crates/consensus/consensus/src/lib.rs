@@ -65,7 +65,6 @@ pub trait FullConsensus<N: NodePrimitives>: Consensus<N::Block> {
         result: &BlockExecutionResult<N::Receipt>,
         receipt_root_bloom: Option<ReceiptRootBloom>,
         block_access_list: Option<BlockAccessList>,
-        allow_bal_check: bool,
     ) -> Result<(), ConsensusError>;
 }
 
