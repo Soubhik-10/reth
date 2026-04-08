@@ -212,7 +212,7 @@ impl Capabilities {
         }
     }
     /// Returns true if this peer supports the given eth protocol version.
-    pub fn supports_eth_version(&self, version: EthVersion) -> bool {
+    pub const fn supports_eth_version(&self, version: EthVersion) -> bool {
         match version {
             EthVersion::Eth66 => self.eth_66,
             EthVersion::Eth67 => self.eth_67,
