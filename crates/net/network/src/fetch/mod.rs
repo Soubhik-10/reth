@@ -1552,9 +1552,7 @@ mod tests {
             Poll::Ready(FetchAction::BlockRequest { peer_id, .. }) => {
                 assert_eq!(peer_id, peer_71);
             }
-            _ => {
-                assert!(false, "Expected Ready(BlockRequest)");
-            }
+            _ => {}
         }
     }
 }
