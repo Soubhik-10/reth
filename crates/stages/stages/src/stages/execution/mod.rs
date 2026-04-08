@@ -304,8 +304,7 @@ where
         self.ensure_consistency(provider, input.checkpoint().block_number, None)?;
 
         let db = StateProviderDatabase(LatestStateProviderRef::new(provider));
-        let has_bal = block.header().block_access_list_hash().is_some();
-        let mut executor = self.evm_config.batch_executor_with_bal(db, has_bal);
+        let mut executor = self.evm_config.batch_executor(db);
 
         // Progress tracking
         let mut stage_progress = start_block;
