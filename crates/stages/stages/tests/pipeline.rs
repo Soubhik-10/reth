@@ -339,7 +339,7 @@ async fn run_pipeline_forward_and_unwind(
         let output = {
             let state_provider = provider.latest();
             let db = StateProviderDatabase::new(&*state_provider);
-            let executor = evm_config.batch_executor(db);
+            let executor = evm_config.batch_executor_with_bal(db);
             executor.execute(&block_with_senders)?
         };
 

@@ -448,6 +448,15 @@ pub trait ConfigureEvm: Clone + Debug + Send + Sync + Unpin {
         BasicBlockExecutor::new(self, db)
     }
 
+    /// Returns a new [`Executor`] for executing blocks with bal enabled.
+    #[auto_impl(keep_default_for(&, Arc))]
+    fn executor_with_bal<DB: Database>(
+        &self,
+        db: DB,
+    ) -> impl Executor<DB, Primitives = Self::Primitives, Error = BlockExecutionError> {
+        BasicBlockExecutor::new_with_bal(self, db)
+    }
+
     /// Returns a new [`BasicBlockExecutor`].
     #[auto_impl(keep_default_for(&, Arc))]
     fn batch_executor<DB: Database>(
@@ -455,6 +464,15 @@ pub trait ConfigureEvm: Clone + Debug + Send + Sync + Unpin {
         db: DB,
     ) -> impl Executor<DB, Primitives = Self::Primitives, Error = BlockExecutionError> {
         BasicBlockExecutor::new(self, db)
+    }
+
+    /// Returns a new [`BasicBlockExecutor`] with bal.
+    #[auto_impl(keep_default_for(&, Arc))]
+    fn batch_executor_with_bal<DB: Database>(
+        &self,
+        db: DB,
+    ) -> impl Executor<DB, Primitives = Self::Primitives, Error = BlockExecutionError> {
+        BasicBlockExecutor::new_with_bal(self, db)
     }
 }
 
