@@ -493,10 +493,9 @@ impl Peer {
     /// Returns true if this peer is better than the other peer based on the given requirements.
     fn is_better(&self, other: &Self, requirement: &BestPeerRequirements) -> bool {
         match requirement {
-            BestPeerRequirements::None => false,
             BestPeerRequirements::FullBlockRange(range) => self.has_better_range(other, range),
             BestPeerRequirements::FullBlock => self.has_full_history() && !other.has_full_history(),
-            BestPeerRequirements::EthVersion(_) => false,
+            BestPeerRequirements::None | BestPeerRequirements::EthVersion(_) => false,
         }
     }
 }
