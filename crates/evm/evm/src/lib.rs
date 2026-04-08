@@ -471,8 +471,13 @@ pub trait ConfigureEvm: Clone + Debug + Send + Sync + Unpin {
     fn batch_executor_with_bal<DB: Database>(
         &self,
         db: DB,
+        has_bal: bool,
     ) -> impl Executor<DB, Primitives = Self::Primitives, Error = BlockExecutionError> {
-        BasicBlockExecutor::new_with_bal(self, db)
+        if has_bal {
+            BasicBlockExecutor::new_with_bal(self, db)
+        } else {
+            BasicBlockExecutor::new(self, db)
+        }
     }
 }
 

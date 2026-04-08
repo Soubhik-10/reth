@@ -334,12 +334,12 @@ async fn run_pipeline_forward_and_unwind(
             ),
             vec![signer_address, signer_address], // Both txs from same sender
         );
-
+        let has_bal = block_with_senders.header().block_access_list_hash().is_some();
         // Execute in a scope so state_provider is dropped before we use provider for writes
         let output = {
             let state_provider = provider.latest();
             let db = StateProviderDatabase::new(&*state_provider);
-            let executor = evm_config.batch_executor_with_bal(db);
+            let executor = evm_config.batch_executor_with_bal(db, has_bal);
             executor.execute(&block_with_senders)?
         };
 

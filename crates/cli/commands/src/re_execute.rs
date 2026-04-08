@@ -153,7 +153,7 @@ impl<C: ChainSpecParser<ChainSpec: EthChainSpec + Hardforks + EthereumHardforks>
                     }
                     let chunk_end = (chunk_start + blocks_per_chunk).min(max_block);
 
-                    let mut executor = evm_config.batch_executor_with_bal(db_at(chunk_start - 1));
+                    let mut executor = evm_config.batch_executor_with_bal(db_at(chunk_start - 1),true);
                     let mut executor_created = Instant::now();
 
                     'blocks: for block in chunk_start..chunk_end {
@@ -164,13 +164,14 @@ impl<C: ChainSpecParser<ChainSpec: EthChainSpec + Hardforks + EthereumHardforks>
                         let block = provider_factory
                             .recovered_block(block.into(), TransactionVariant::NoHash)?
                             .unwrap();
+                        let has_bal=block.header().block_access_list_hash().is_some();
 
                         let result = match executor.execute_one(&block) {
                             Ok(result) => result,
                             Err(err) => {
                                 if skip_invalid_blocks {
                                     executor =
-                                        evm_config.batch_executor_with_bal(db_at(block.number()));
+                                        evm_config.batch_executor_with_bal(db_at(block.number()),has_bal);
                                     let _ =
                                         info_tx.send((block, eyre::Report::new(err)));
                                     continue
@@ -231,7 +232,7 @@ impl<C: ChainSpecParser<ChainSpec: EthChainSpec + Hardforks + EthereumHardforks>
                                         error!(number=?block.number(), ?mismatch, "Gas usage mismatch");
                                         if skip_invalid_blocks {
                                             executor = evm_config
-                                                .batch_executor_with_bal(db_at(block.number()));
+                                                .batch_executor_with_bal(db_at(block.number()), has_bal);
                                             let _ = info_tx.send((block, err));
                                             continue 'blocks;
                                         }
@@ -251,7 +252,7 @@ impl<C: ChainSpecParser<ChainSpec: EthChainSpec + Hardforks + EthereumHardforks>
                             executor_created.elapsed() > executor_lifetime
                         {
                             executor =
-                                evm_config.batch_executor_with_bal(db_at(block.number()));
+                                evm_config.batch_executor_with_bal(db_at(block.number()),has_bal);
                             executor_created = Instant::now();
                         }
                     }
