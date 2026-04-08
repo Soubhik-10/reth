@@ -1548,11 +1548,8 @@ mod tests {
         );
 
         // Now we must get Ready(BlockRequest)
-        match fetcher.poll(&mut cx) {
-            Poll::Ready(FetchAction::BlockRequest { peer_id, .. }) => {
-                assert_eq!(peer_id, peer_71);
-            }
-            _ => {}
+        if let Poll::Ready(FetchAction::BlockRequest { peer_id, .. }) = fetcher.poll(&mut cx) {
+            assert_eq!(peer_id, peer_71);
         }
     }
 }
