@@ -598,7 +598,7 @@ impl<N: NetworkPrimitives> DownloadRequest<N> {
         match self {
             Self::GetBlockHeaders { priority, .. } |
             Self::GetBlockBodies { priority, .. } |
-            Self::GetBlockAccessLists { priority, .. } => priority,
+            Self::GetBlockAccessLists { priority, .. } |
             Self::GetReceipts { priority, .. } => priority,
         }
     }
