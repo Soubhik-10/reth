@@ -65,10 +65,6 @@ pub struct StateFetcher<N: NetworkPrimitives = EthNetworkPrimitives> {
     download_requests_rx: UnboundedReceiverStream<DownloadRequest<N>>,
     /// Sender for download requests, used to detach a [`FetchClient`]
     download_requests_tx: UnboundedSender<DownloadRequest<N>>,
-    /// Waker to notify when a new peer might satisfy queued requests.
-    ///
-    /// Stored so that `new_active_peer` can wake the fetcher when a peer is added.
-    waker: Option<std::task::Waker>,
 }
 
 // === impl StateSyncer ===
@@ -113,10 +109,6 @@ impl<N: NetworkPrimitives> StateFetcher<N> {
                 range_info,
             },
         );
-        // waking the fetcher ensures any queued request will be retried
-        if let Some(waker) = self.waker.take() {
-            waker.wake();
-        }
     }
 
     /// Removes the peer from the peer list, after which it is no longer available for future
@@ -181,13 +173,13 @@ impl<N: NetworkPrimitives> StateFetcher<N> {
             // replace best peer if our current best peer sent us a bad response last time
             if best_peer.1.last_response_likely_bad && !maybe_better.1.last_response_likely_bad {
                 best_peer = maybe_better;
-                continue;
+                continue
             }
 
             // replace best peer if this peer meets the requirements better
             if maybe_better.1.is_better(best_peer.1, &requirement) {
                 best_peer = maybe_better;
-                continue;
+                continue
             }
 
             // replace best peer if this peer has better rtt and both have same range quality
