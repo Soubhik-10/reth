@@ -454,7 +454,7 @@ pub trait ConfigureEvm: Clone + Debug + Send + Sync + Unpin {
         &self,
         db: DB,
     ) -> impl Executor<DB, Primitives = Self::Primitives, Error = BlockExecutionError> {
-        BasicBlockExecutor::new_with_bal(self, db)
+        BasicBlockExecutor::new_with_bal(self, db, true)
     }
 
     /// Returns a new [`BasicBlockExecutor`].
@@ -473,11 +473,7 @@ pub trait ConfigureEvm: Clone + Debug + Send + Sync + Unpin {
         db: DB,
         has_bal: bool,
     ) -> impl Executor<DB, Primitives = Self::Primitives, Error = BlockExecutionError> {
-        if has_bal {
-            BasicBlockExecutor::new_with_bal(self, db)
-        } else {
-            BasicBlockExecutor::new(self, db)
-        }
+        BasicBlockExecutor::new_with_bal(self, db, has_bal)
     }
 }
 

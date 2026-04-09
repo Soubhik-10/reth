@@ -34,6 +34,8 @@ futures-util.workspace = true
 metrics = { workspace = true, optional = true }
 rayon = { workspace = true, optional = true }
 
+tracing.workspace = true
+
 [dev-dependencies]
 reth-ethereum-primitives.workspace = true
 

@@ -373,7 +373,7 @@ where
                     })
                 }
             }
-
+            tracing::info!("BAL is {:?}", bal);
             if let Err(err) =
                 self.consensus.validate_block_post_execution(&block, &result, None, bal)
             {
