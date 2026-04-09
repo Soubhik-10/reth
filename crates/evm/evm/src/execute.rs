@@ -613,7 +613,6 @@ where
         if has_bal {
             executor.evm_mut().db_mut().bump_bal_index();
         }
-        executor.evm_mut().db_mut().bump_bal_index();
 
         for tx in block.transactions_recovered() {
             executor.execute_transaction(tx)?;
