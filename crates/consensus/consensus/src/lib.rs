@@ -32,6 +32,7 @@ extern crate alloc;
 
 use alloc::{boxed::Box, fmt::Debug, string::String, sync::Arc, vec::Vec};
 use alloy_consensus::Header;
+use alloy_eip7928::BlockAccessList;
 use alloy_primitives::{BlockHash, BlockNumber, Bloom, B256};
 use core::error::Error;
 
@@ -79,6 +80,7 @@ pub trait FullConsensus<N: NodePrimitives>: Consensus<N::Block> {
         block: &RecoveredBlock<N::Block>,
         result: &BlockExecutionResult<N::Receipt>,
         receipt_root_bloom: Option<ReceiptRootBloom>,
+        block_access_list: Option<BlockAccessList>,
     ) -> Result<(), ConsensusError>;
 }
 
@@ -456,6 +458,9 @@ pub enum ConsensusError {
     /// EIP-7825: Transaction gas limit exceeds maximum allowed
     #[error(transparent)]
     TransactionGasLimitTooHigh(Box<TxGasLimitTooHighErr>),
+    /// Error when the block access list hash doesn't match the expected value.
+    #[error("block access list hash mismatch: {0}")]
+    BlockAccessListHashMismatch(GotExpectedBoxed<B256>),
     /// Other, likely an injected L2 error.
     #[error("{0}")]
     Other(String),
