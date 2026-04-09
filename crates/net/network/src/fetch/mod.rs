@@ -163,7 +163,7 @@ impl<N: NetworkPrimitives> StateFetcher<N> {
             peer.state.is_idle() &&
                 match &requirement {
                     BestPeerRequirements::EthVersion(ver) => {
-                        peer.capabilities.supports_eth_version(*ver)
+                        peer.capabilities.supports_eth_at_least(ver)
                     }
                     _ => true,
                 }
