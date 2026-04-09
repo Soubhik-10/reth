@@ -179,9 +179,8 @@ where
 
         let mut request_cache = self.cached_reads(parent_header_hash).await;
 
-        let has_bal = block.header().block_access_list_hash().is_some();
         let cached_db = request_cache.as_db_mut(StateProviderDatabase::new(&state_provider));
-        let executor = self.evm_config.batch_executor_with_bal(cached_db, has_bal);
+        let executor = self.evm_config.batch_executor(cached_db);
 
         let mut accessed_blacklisted = None;
         let output = executor.execute_with_state_closure(&block, |state| {

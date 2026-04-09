@@ -210,11 +210,9 @@ where
         parent_header: &SealedHeader<N::BlockHeader>,
         block: &RecoveredBlock<N::Block>,
     ) -> eyre::Result<(ExecutionWitness, BundleState)> {
-        let has_bal = block.header().block_access_list_hash().is_some();
-        let mut executor = self.evm_config.batch_executor_with_bal(
-            StateProviderDatabase::new(self.provider.state_by_block_hash(parent_header.hash())?),
-            has_bal,
-        );
+        let mut executor = self.evm_config.batch_executor(StateProviderDatabase::new(
+            self.provider.state_by_block_hash(parent_header.hash())?,
+        ));
 
         executor.execute_one(block)?;
         let db = executor.into_state();

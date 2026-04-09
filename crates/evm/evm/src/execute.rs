@@ -606,6 +606,8 @@ where
 
         if has_bal {
             executor.evm_mut().db_mut().bal_state.bal_builder = Some(Bal::new());
+        } else {
+            executor.evm_mut().db_mut().bal_state.bal_builder = None;
         }
 
         executor.apply_pre_execution_changes()?;

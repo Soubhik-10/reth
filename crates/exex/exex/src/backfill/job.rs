@@ -213,16 +213,12 @@ where
             .ok_or_else(|| ProviderError::HeaderNotFound(block_number.into()))
             .map_err(BlockExecutionError::other)?;
 
-        let has_bal = block_with_senders.header().block_access_list_hash().is_some();
         // Configure the executor to use the previous block's state.
-        let executor = self.evm_config.batch_executor_with_bal(
-            StateProviderDatabase::new(
-                self.provider
-                    .history_by_block_number(block_number.saturating_sub(1))
-                    .map_err(BlockExecutionError::other)?,
-            ),
-            has_bal,
-        );
+        let executor = self.evm_config.batch_executor(StateProviderDatabase::new(
+            self.provider
+                .history_by_block_number(block_number.saturating_sub(1))
+                .map_err(BlockExecutionError::other)?,
+        ));
 
         trace!(target: "exex::backfill", number = block_number, txs = block_with_senders.body().transaction_count(), "Executing block");
 
