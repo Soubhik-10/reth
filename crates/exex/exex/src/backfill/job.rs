@@ -80,7 +80,7 @@ where
             self.provider
                 .history_by_block_number(self.range.start().saturating_sub(1))
                 .map_err(BlockExecutionError::other)?,
-        )); //TODO: change to batch_executor_with_bal when we have access.
+        ));
 
         let mut fetch_block_duration = Duration::default();
         let mut execution_duration = Duration::default();

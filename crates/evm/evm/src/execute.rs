@@ -571,16 +571,6 @@ impl<F, DB: Database> BasicBlockExecutor<F, DB> {
         let db = State::builder().with_database(db).with_bundle_update().build();
         Self { strategy_factory, db }
     }
-
-    /// Creates a new `BasicBlockExecutor` with the given strategy and bal if enabled.
-    pub fn new_with_bal(strategy_factory: F, db: DB, has_bal: bool) -> Self {
-        let db = State::builder()
-            .with_database(db)
-            .with_bundle_update()
-            .with_bal_builder_if(has_bal)
-            .build();
-        Self { strategy_factory, db }
-    }
 }
 
 impl<F, DB> Executor<DB> for BasicBlockExecutor<F, DB>
@@ -602,7 +592,6 @@ where
             .map_err(BlockExecutionError::other)?;
 
         let has_bal = block.header().block_access_list_hash().is_some();
-        tracing::info!("Has Bal : {}", has_bal);
 
         if has_bal {
             executor.evm_mut().db_mut().bal_state.bal_builder = Some(Bal::new());
