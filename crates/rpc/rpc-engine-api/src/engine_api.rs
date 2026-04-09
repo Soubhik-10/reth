@@ -583,7 +583,7 @@ where
         &self,
         payload_id: PayloadId,
     ) -> EngineApiResult<EngineT::ExecutionPayloadEnvelopeV6> {
-        self.get_payload_inner(payload_id, EngineApiMessageVersion::V6S).await
+        self.get_payload_inner(payload_id, EngineApiMessageVersion::V6).await
     }
 
     /// Metrics version of `get_payload_v6`
