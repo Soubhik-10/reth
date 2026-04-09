@@ -130,7 +130,7 @@ impl<N: NetworkPrimitives> BlockAccessListsClient for FetchClient<N> {
     type Output =
         std::pin::Pin<Box<dyn Future<Output = PeerRequestResult<BlockAccessLists>> + Send + Sync>>;
 
-    /// Sends a `GetBlockBodies` request to an available peer.
+    /// Sends a `GetBlockAccessLists` request to an available peer.
     fn get_block_access_lists_with_priority(
         &self,
         hashes: Vec<B256>,

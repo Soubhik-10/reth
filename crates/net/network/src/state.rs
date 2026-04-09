@@ -482,6 +482,9 @@ impl<N: NetworkPrimitives> NetworkState<N> {
                 let normalized = res.map(ReceiptsResponse::from);
                 self.state_fetcher.on_receipts_response(peer, normalized)
             }
+            PeerResponseResult::BlockAccessLists(res) => {
+                self.state_fetcher.on_block_access_lists_response(peer, res)
+            }
             _ => None,
         };
 

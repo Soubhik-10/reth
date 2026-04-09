@@ -124,6 +124,9 @@ impl<N: NetworkPrimitives> StateFetcher<N> {
         if let Some(req) = self.inflight_bodies_requests.remove(peer) {
             let _ = req.response.send(Err(RequestError::ConnectionDropped));
         }
+        if let Some(req) = self.inflight_bals_requests.remove(peer) {
+            let _ = req.response.send(Err(RequestError::ConnectionDropped));
+        }
         if let Some(req) = self.inflight_receipts_requests.remove(peer) {
             let _ = req.response.send(Err(RequestError::ConnectionDropped));
         }
@@ -362,6 +365,27 @@ impl<N: NetworkPrimitives> StateFetcher<N> {
         None
     }
 
+    /// Called on a `GetBlockAccessLists` response from a peer
+    pub(crate) fn on_block_access_lists_response(
+        &mut self,
+        peer_id: PeerId,
+        res: RequestResult<BlockAccessLists>,
+    ) -> Option<BlockResponseOutcome> {
+        let is_likely_bad_response = res.is_err();
+
+        if let Some(resp) = self.inflight_bals_requests.remove(&peer_id) {
+            let _ = resp.response.send(res.map(|b| (peer_id, b).into()));
+        }
+        if let Some(peer) = self.peers.get_mut(&peer_id) {
+            peer.last_response_likely_bad = is_likely_bad_response;
+
+            if peer.state.on_request_finished() && !is_likely_bad_response {
+                return self.followup_request(peer_id)
+            }
+        }
+        None
+    }
+
     /// Called on a `GetReceipts` response from a peer.
     ///
     /// All receipt variants (legacy with bloom, eth/69, eth/70) are expected to be normalized
@@ -495,6 +519,8 @@ impl Peer {
         match requirement {
             BestPeerRequirements::FullBlockRange(range) => self.has_better_range(other, range),
             BestPeerRequirements::FullBlock => self.has_full_history() && !other.has_full_history(),
+            // Version-based filtering happens in `next_best_peer`, so by the time we get here
+            // both peers already satisfy the version requirement.
             BestPeerRequirements::None | BestPeerRequirements::EthVersion(_) => false,
         }
     }
