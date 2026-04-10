@@ -568,21 +568,7 @@ pub struct BasicBlockExecutor<F, DB> {
 impl<F, DB: Database> BasicBlockExecutor<F, DB> {
     /// Creates a new `BasicBlockExecutor` with the given strategy.
     pub fn new(strategy_factory: F, db: DB) -> Self {
-        let db = State::builder()
-            .with_database(db)
-            .with_bundle_update()
-            .with_bal_builder_if(true)
-            .build();
-        Self { strategy_factory, db }
-    }
-
-    /// Creates a new `BasicBlockExecutor` with the given strategy and bal if enabled.
-    pub fn new_with_bal(strategy_factory: F, db: DB, has_bal: bool) -> Self {
-        let db = State::builder()
-            .with_database(db)
-            .with_bundle_update()
-            .with_bal_builder_if(has_bal)
-            .build();
+        let db = State::builder().with_database(db).with_bundle_update().build();
         Self { strategy_factory, db }
     }
 }
@@ -605,13 +591,25 @@ where
             .executor_for_block(&mut self.db, block)
             .map_err(BlockExecutionError::other)?;
 
-        executor.evm_mut().db_mut().bal_state.bal_builder = Some(Bal::new());
+        let has_bal = block.header().block_access_list_hash().is_some();
+
+        if has_bal {
+            executor.evm_mut().db_mut().bal_state.bal_builder = Some(Bal::new());
+        } else {
+            executor.evm_mut().db_mut().bal_state.bal_builder = None;
+        }
+
         executor.apply_pre_execution_changes()?;
-        executor.evm_mut().db_mut().bump_bal_index();
+
+        if has_bal {
+            executor.evm_mut().db_mut().bump_bal_index();
+        }
 
         for tx in block.transactions_recovered() {
             executor.execute_transaction(tx)?;
-            executor.evm_mut().db_mut().bump_bal_index();
+            if has_bal {
+                executor.evm_mut().db_mut().bump_bal_index();
+            }
         }
 
         let result = executor.apply_post_execution_changes()?;

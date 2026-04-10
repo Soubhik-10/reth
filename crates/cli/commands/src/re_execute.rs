@@ -164,7 +164,6 @@ impl<C: ChainSpecParser<ChainSpec: EthChainSpec + Hardforks + EthereumHardforks>
                         let block = provider_factory
                             .recovered_block(block.into(), TransactionVariant::NoHash)?
                             .unwrap();
-
                         let result = match executor.execute_one(&block) {
                             Ok(result) => result,
                             Err(err) => {
