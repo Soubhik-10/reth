@@ -565,7 +565,7 @@ where
         // The receipt root task is spawned before execution and receives receipts incrementally
         // as transactions complete, allowing parallel computation during execution.
         let execute_block_start = Instant::now();
-        let (output, senders, receipt_root_rx) =
+        let (output, senders, receipt_root_rx, built_bal) =
             match self.execute_block(state_provider, env, &input, &mut handle) {
                 Ok(output) => output,
                 Err(err) => return self.handle_execution_error(input, err, &parent_block),
@@ -647,6 +647,7 @@ where
                 transaction_root,
                 receipt_root_bloom,
                 hashed_state,
+                built_bal
             ),
             block
         );
@@ -895,6 +896,7 @@ where
             BlockExecutionOutput<N::Receipt>,
             Vec<Address>,
             tokio::sync::oneshot::Receiver<(B256, alloy_primitives::Bloom)>,
+            Option<BlockAccessList>,
         ),
         InsertBlockErrorKind,
     >
@@ -902,15 +904,21 @@ where
         S: StateProvider + Send,
         Err: core::error::Error + Send + Sync + 'static,
         V: PayloadValidator<T, Block = N::Block>,
-        T: PayloadTypes<BuiltPayload: BuiltPayload<Primitives = N>>,
+        T: PayloadTypes<
+            BuiltPayload: BuiltPayload<Primitives = N>,
+            ExecutionData: ExecutionPayload,
+        >,
         Evm: ConfigureEngineEvm<T::ExecutionData, Primitives = N>,
     {
         debug!(target: "engine::tree::payload_validator", "Executing block");
+
+        let has_bal = input.block_access_list().is_some();
 
         let mut db = debug_span!(target: "engine::tree", "build_state_db").in_scope(|| {
             State::builder()
                 .with_database(StateProviderDatabase::new(state_provider))
                 .with_bundle_update()
+                .with_bal_builder_if(has_bal)
                 .build()
         });
 
@@ -969,6 +977,7 @@ where
             handle.iter_transactions(),
             &receipt_tx,
             &executed_tx_index,
+            has_bal,
         )?;
         drop(receipt_tx);
 
@@ -983,6 +992,9 @@ where
         debug_span!(target: "engine::tree", "merge_transitions")
             .in_scope(|| db.merge_transitions(BundleRetention::Reverts));
 
+        // Extract the built bal is payload has bal
+        let built_bal = if has_bal { db.take_built_alloy_bal() } else { None };
+
         let output = BlockExecutionOutput { result, state: db.take_bundle() };
 
         let execution_duration = execution_start.elapsed();
@@ -990,7 +1002,7 @@ where
         self.metrics.record_block_execution_gas_bucket(output.result.gas_used, execution_duration);
         debug!(target: "engine::tree::payload_validator", elapsed = ?execution_duration, "Executed block");
 
-        Ok((output, senders, result_rx))
+        Ok((output, senders, result_rx, built_bal))
     }
 
     /// Executes transactions and collects senders, streaming receipts to a background task.
@@ -1002,18 +1014,20 @@ where
     /// - Collecting transaction senders for later use
     ///
     /// Returns the executor (for finalization) and the collected senders.
-    fn execute_transactions<E, Tx, InnerTx, Err>(
+    fn execute_transactions<'a, E, Tx, InnerTx, Err, DB>(
         &self,
         mut executor: E,
         transaction_count: usize,
         transactions: impl Iterator<Item = Result<Tx, Err>>,
         receipt_tx: &crossbeam_channel::Sender<IndexedReceipt<N::Receipt>>,
         executed_tx_index: &AtomicUsize,
+        has_bal: bool,
     ) -> Result<(E, Vec<Address>), BlockExecutionError>
     where
-        E: BlockExecutor<Receipt = N::Receipt>,
+        E: BlockExecutor<Receipt = N::Receipt, Evm: alloy_evm::Evm<DB = &'a mut State<DB>>>,
         Tx: alloy_evm::block::ExecutableTx<E> + alloy_evm::RecoveredTx<InnerTx>,
         InnerTx: TxHashRef,
+        DB: revm::Database + 'a,
         Err: core::error::Error + Send + Sync + 'static,
     {
         let mut senders = Vec::with_capacity(transaction_count);
@@ -1023,6 +1037,11 @@ where
         debug_span!(target: "engine::tree", "pre_execution")
             .in_scope(|| executor.apply_pre_execution_changes())?;
         self.metrics.record_pre_execution(pre_exec_start.elapsed());
+
+        // Bump BAL index after pre-execution changes (EIP-7928: index 0 is pre-execution)
+        if has_bal {
+            executor.evm_mut().db_mut().bump_bal_index();
+        }
 
         // Execute transactions
         let exec_span = debug_span!(target: "engine::tree", "execution").entered();
@@ -1068,6 +1087,10 @@ where
                     let _ = receipt_tx.send(IndexedReceipt::new(tx_index, receipt.clone()));
                 }
             }
+        }
+        // Bump BAL index after each transaction (EIP-7928)
+        if has_bal {
+            executor.evm_mut().db_mut().bump_bal_index();
         }
         drop(exec_span);
 
@@ -1352,6 +1375,7 @@ where
         transaction_root: Option<B256>,
         receipt_root_bloom: Option<ReceiptRootBloom>,
         hashed_state: LazyHashedPostState,
+        built_bal: Option<BlockAccessList>,
     ) -> Result<LazyHashedPostState, InsertBlockErrorKind>
     where
         V: PayloadValidator<T, Block = N::Block>,
@@ -1379,7 +1403,7 @@ where
             debug_span!(target: "engine::tree::payload_validator", "validate_block_post_execution")
                 .entered();
         if let Err(err) =
-            self.consensus.validate_block_post_execution(block, output, receipt_root_bloom, None)
+            self.consensus.validate_block_post_execution(block, output, receipt_root_bloom, built_bal)
         {
             // call post-block hook
             self.on_invalid_block(parent_block, block, output, None, ctx.state_mut());
