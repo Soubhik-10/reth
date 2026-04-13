@@ -35,11 +35,7 @@ alloy-eips.workspace = true
 alloy-json-rpc.workspace = true
 
 alloy-primitives = { workspace = true, features = ["rand"] }
-alloy-provider = { workspace = true, features = [
-    "engine-api",
-    "pubsub",
-    "reqwest-rustls-tls",
-], default-features = false }
+alloy-provider = { workspace = true, features = ["engine-api", "pubsub", "reqwest-rustls-tls"], default-features = false }
 alloy-pubsub.workspace = true
 alloy-rpc-client = { workspace = true, features = ["pubsub"] }
 alloy-rpc-types-engine = { workspace = true, features = ["kzg"] }
@@ -67,12 +63,7 @@ url.workspace = true
 # async
 async-trait.workspace = true
 futures.workspace = true
-tokio = { workspace = true, features = [
-    "sync",
-    "macros",
-    "time",
-    "rt-multi-thread",
-] }
+tokio = { workspace = true, features = ["sync", "macros", "time", "rt-multi-thread"] }
 
 # misc
 clap = { workspace = true, features = ["derive", "env"] }
@@ -87,7 +78,7 @@ csv.workspace = true
 [dev-dependencies]
 
 [features]
-# default = ["jemalloc"]
+default = ["jemalloc"]
 
 asm-keccak = [
     "reth-node-core/asm-keccak",
