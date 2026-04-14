@@ -1,14 +1,13 @@
 //! Common helpers for reth-bench commands.
 
 use alloy_eips::{eip7928::BlockAccessList, BlockNumberOrTag};
-use alloy_primitives::{B256, Bytes};
+use alloy_primitives::{Bytes, B256};
 use alloy_provider::{network::AnyNetwork, Provider, RootProvider};
-use eyre::Result;
+use eyre::{eyre, Result};
 use std::{
     io::{BufReader, Read},
     time::Duration,
 };
-use eyre::eyre;
 
 /// Read input from either a file path or stdin.
 pub(crate) fn read_input(path: Option<&str>) -> Result<String> {

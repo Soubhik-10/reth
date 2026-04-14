@@ -4,10 +4,10 @@
 use crate::{
     bench::{
         context::BenchContext,
-        helpers::{fetch_block_access_list, parse_duration},
+        helpers::{fetch_block_access_list, fetch_block_access_list_with_rpc, parse_duration},
         metrics_scraper::MetricsScraper,
         output::{
-            CombinedResult, NewPayloadResult, TotalGasOutput, TotalGasRow, write_benchmark_results
+            write_benchmark_results, CombinedResult, NewPayloadResult, TotalGasOutput, TotalGasRow,
         },
     },
     valid_payload::{
@@ -200,13 +200,15 @@ impl Command {
                 finalized_block_hash: finalized,
             };
 
+            let bal = fetch_block_access_list(&block_provider, block.header.number).await?;
+
             let (version, params) = block_to_new_payload(
                 block,
                 rlp,
                 use_reth_namespace,
                 wait_for_persistence,
                 no_wait_for_caches,
-                bal
+                bal,
             )?;
             let start = Instant::now();
             let server_timings =

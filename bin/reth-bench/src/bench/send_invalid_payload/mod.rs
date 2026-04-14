@@ -256,10 +256,10 @@ impl Command {
         let blob_versioned_hashes =
             block.body.blob_versioned_hashes_iter().copied().collect::<Vec<_>>();
         let use_v4 = block.header.requests_hash.is_some();
-        let use_v5=block.header.block_access_list_hash.is_some();
+        let use_v5 = block.header.block_access_list_hash.is_some();
         let requests_hash = self.requests_hash.or(block.header.requests_hash);
 
-        let mut execution_payload = ExecutionPayload::from_block_slow(&block).0;
+        let mut execution_payload = ExecutionPayload::from_block_slow_with_bal(&block, bal).0;
 
         let changes = match &mut execution_payload {
             ExecutionPayload::V1(p) => config.apply_to_payload_v1(p),
@@ -335,7 +335,13 @@ impl Command {
         match self.mode {
             Mode::Execute => {
                 let mut command = std::process::Command::new("cast");
-                let method = if use_v5 { "engine_newPayloadV5" } else if use_v4  { "engine_newPayloadV4" } else { "engine_newPayloadV3" };
+                let method = if use_v5 {
+                    "engine_newPayloadV5"
+                } else if use_v4 {
+                    "engine_newPayloadV4"
+                } else {
+                    "engine_newPayloadV3"
+                };
                 command.arg("rpc").arg(method).arg("--raw");
                 if let Some(rpc_url) = self.rpc_url {
                     command.arg("--rpc-url").arg(rpc_url);

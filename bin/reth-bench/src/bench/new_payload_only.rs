@@ -2,9 +2,13 @@
 
 use crate::{
     bench::{
-        context::BenchContext, helpers::fetch_block_access_list, metrics_scraper::MetricsScraper, output::{
-            GAS_OUTPUT_SUFFIX, NEW_PAYLOAD_OUTPUT_SUFFIX, NewPayloadResult, TotalGasOutput, TotalGasRow
-        }
+        context::BenchContext,
+        helpers::fetch_block_access_list,
+        metrics_scraper::MetricsScraper,
+        output::{
+            NewPayloadResult, TotalGasOutput, TotalGasRow, GAS_OUTPUT_SUFFIX,
+            NEW_PAYLOAD_OUTPUT_SUFFIX,
+        },
     },
     valid_payload::{block_to_new_payload, call_new_payload_with_reth},
 };
@@ -130,7 +134,7 @@ impl Command {
                 use_reth_namespace,
                 wait_for_persistence,
                 no_wait_for_caches,
-                bal
+                bal,
             )?;
 
             let start = Instant::now();
