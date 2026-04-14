@@ -1,12 +1,14 @@
 //! Common helpers for reth-bench commands.
 
 use alloy_eips::{eip7928::BlockAccessList, BlockNumberOrTag};
+use alloy_primitives::{B256, Bytes};
 use alloy_provider::{network::AnyNetwork, Provider, RootProvider};
 use eyre::Result;
 use std::{
     io::{BufReader, Read},
     time::Duration,
 };
+use eyre::eyre;
 
 /// Read input from either a file path or stdin.
 pub(crate) fn read_input(path: Option<&str>) -> Result<String> {
@@ -84,6 +86,32 @@ pub(crate) async fn fetch_block_access_list(
         .and_then(|block_access_list: Option<BlockAccessList>| {
             block_access_list.ok_or_else(|| eyre::eyre!("BAL not found for block {block_number}"))
         })
+}
+
+/// Fetches the block access list for a given block hash using a direct RPC call.
+pub(crate) async fn fetch_block_access_list_with_rpc(
+    rpc_url: &str,
+    block_hash: B256,
+) -> eyre::Result<Bytes> {
+    let client = reqwest::Client::new();
+
+    let request = serde_json::json!({
+        "jsonrpc": "2.0",
+        "method": "eth_getBlockAccessListByBlockHash",
+        "params": [format!("{:#x}", block_hash)],
+        "id": 1
+    });
+
+    let response =
+        client.post(rpc_url).json(&request).send().await?.json::<serde_json::Value>().await?;
+
+    let result = response.get("result").ok_or_else(|| eyre!("Missing result field"))?;
+
+    let bal: BlockAccessList = serde_json::from_value(result.clone())
+        .map_err(|e| eyre!("Failed to deserialize BlockAccessList: {e}"))?;
+
+    let bytes = alloy_rlp::encode(bal);
+    Ok(bytes.into())
 }
 
 #[cfg(test)]

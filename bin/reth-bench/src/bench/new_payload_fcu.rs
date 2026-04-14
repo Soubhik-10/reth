@@ -4,10 +4,10 @@
 use crate::{
     bench::{
         context::BenchContext,
-        helpers::parse_duration,
+        helpers::{fetch_block_access_list, parse_duration},
         metrics_scraper::MetricsScraper,
         output::{
-            write_benchmark_results, CombinedResult, NewPayloadResult, TotalGasOutput, TotalGasRow,
+            CombinedResult, NewPayloadResult, TotalGasOutput, TotalGasRow, write_benchmark_results
         },
     },
     valid_payload::{
@@ -192,6 +192,8 @@ impl Command {
 
             debug!(target: "reth-bench", ?block_number, "Sending payload");
 
+            let bal = fetch_block_access_list(&block_provider, block.header.number).await?;
+
             let forkchoice_state = ForkchoiceState {
                 head_block_hash: head,
                 safe_block_hash: safe,
@@ -204,6 +206,7 @@ impl Command {
                 use_reth_namespace,
                 wait_for_persistence,
                 no_wait_for_caches,
+                bal
             )?;
             let start = Instant::now();
             let server_timings =

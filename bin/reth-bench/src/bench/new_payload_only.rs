@@ -2,12 +2,9 @@
 
 use crate::{
     bench::{
-        context::BenchContext,
-        metrics_scraper::MetricsScraper,
-        output::{
-            NewPayloadResult, TotalGasOutput, TotalGasRow, GAS_OUTPUT_SUFFIX,
-            NEW_PAYLOAD_OUTPUT_SUFFIX,
-        },
+        context::BenchContext, helpers::fetch_block_access_list, metrics_scraper::MetricsScraper, output::{
+            GAS_OUTPUT_SUFFIX, NEW_PAYLOAD_OUTPUT_SUFFIX, NewPayloadResult, TotalGasOutput, TotalGasRow
+        }
     },
     valid_payload::{block_to_new_payload, call_new_payload_with_reth},
 };
@@ -69,7 +66,9 @@ impl Command {
         let (error_sender, mut error_receiver) = tokio::sync::oneshot::channel();
         let (sender, mut receiver) = tokio::sync::mpsc::channel(buffer_size);
 
+        let block_provider_clone = block_provider.clone();
         tokio::task::spawn(async move {
+            let block_provider = block_provider_clone;
             while benchmark_mode.contains(next_block) {
                 let block_res = block_provider
                     .get_block_by_number(next_block.into())
@@ -123,12 +122,15 @@ impl Command {
 
             debug!(target: "reth-bench", number=?block.header.number, "Sending payload to engine");
 
+            let bal = fetch_block_access_list(&block_provider, block.header.number).await?;
+
             let (version, params) = block_to_new_payload(
                 block,
                 rlp,
                 use_reth_namespace,
                 wait_for_persistence,
                 no_wait_for_caches,
+                bal
             )?;
 
             let start = Instant::now();

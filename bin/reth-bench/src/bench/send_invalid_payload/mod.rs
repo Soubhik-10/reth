@@ -3,6 +3,8 @@
 mod invalidation;
 use invalidation::InvalidationConfig;
 
+use crate::bench::helpers::{fetch_block_access_list, fetch_block_access_list_with_rpc};
+
 use super::helpers::{load_jwt_secret, read_input};
 use alloy_consensus::TxEnvelope;
 use alloy_primitives::{Address, B256};
@@ -241,7 +243,7 @@ impl Command {
             })?
             .into_consensus();
 
-        let bal = fetch_block_access_list(
+        let bal = fetch_block_access_list_with_rpc(
             &self.rpc_url.clone().unwrap_or_default(),
             block.header.hash_slow(),
         )
@@ -254,6 +256,7 @@ impl Command {
         let blob_versioned_hashes =
             block.body.blob_versioned_hashes_iter().copied().collect::<Vec<_>>();
         let use_v4 = block.header.requests_hash.is_some();
+        let use_v5=block.header.block_access_list_hash.is_some();
         let requests_hash = self.requests_hash.or(block.header.requests_hash);
 
         let mut execution_payload = ExecutionPayload::from_block_slow(&block).0;
@@ -314,7 +317,7 @@ impl Command {
             return Ok(());
         }
 
-        let json_request = if use_v5 {
+        let json_request = if use_v4 {
             serde_json::to_string(&(
                 execution_payload,
                 blob_versioned_hashes,
@@ -332,7 +335,7 @@ impl Command {
         match self.mode {
             Mode::Execute => {
                 let mut command = std::process::Command::new("cast");
-                let method = if use_v5 { "engine_newPayloadV5" } else { "engine_newPayloadV4" };
+                let method = if use_v5 { "engine_newPayloadV5" } else if use_v4  { "engine_newPayloadV4" } else { "engine_newPayloadV3" };
                 command.arg("rpc").arg(method).arg("--raw");
                 if let Some(rpc_url) = self.rpc_url {
                     command.arg("--rpc-url").arg(rpc_url);

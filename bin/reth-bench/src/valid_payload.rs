@@ -3,6 +3,7 @@
 //! before sending additional calls.
 
 use alloy_consensus::TxEnvelope;
+use alloy_eips::eip7928::BlockAccessList;
 use alloy_primitives::Bytes;
 use alloy_provider::{ext::EngineApi, network::AnyRpcBlock, Network, Provider};
 use alloy_rpc_types_engine::{
@@ -176,6 +177,7 @@ pub(crate) fn block_to_new_payload(
     reth_new_payload: bool,
     wait_for_persistence: WaitForPersistence,
     no_wait_for_caches: bool,
+    bal: BlockAccessList,
 ) -> eyre::Result<(Option<EngineApiMessageVersion>, serde_json::Value)> {
     let block_number = block.header.number;
     let wait_for_persistence = wait_for_persistence.rpc_value(block_number);
