@@ -241,6 +241,12 @@ impl Command {
             })?
             .into_consensus();
 
+        let bal = fetch_block_access_list(
+            &self.rpc_url.clone().unwrap_or_default(),
+            block.header.hash_slow(),
+        )
+        .await?;
+
         let config = self.build_invalidation_config();
 
         let parent_beacon_block_root =
@@ -308,7 +314,7 @@ impl Command {
             return Ok(());
         }
 
-        let json_request = if use_v4 {
+        let json_request = if use_v5 {
             serde_json::to_string(&(
                 execution_payload,
                 blob_versioned_hashes,
@@ -326,7 +332,7 @@ impl Command {
         match self.mode {
             Mode::Execute => {
                 let mut command = std::process::Command::new("cast");
-                let method = if use_v4 { "engine_newPayloadV4" } else { "engine_newPayloadV3" };
+                let method = if use_v5 { "engine_newPayloadV5" } else { "engine_newPayloadV4" };
                 command.arg("rpc").arg(method).arg("--raw");
                 if let Some(rpc_url) = self.rpc_url {
                     command.arg("--rpc-url").arg(rpc_url);
