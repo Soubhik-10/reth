@@ -4,7 +4,7 @@
 use crate::{
     bench::{
         context::BenchContext,
-        helpers::{fetch_block_access_list, fetch_block_access_list_with_rpc, parse_duration},
+        helpers::{fetch_block_access_list, parse_duration},
         metrics_scraper::MetricsScraper,
         output::{
             write_benchmark_results, CombinedResult, NewPayloadResult, TotalGasOutput, TotalGasRow,
@@ -191,8 +191,6 @@ impl Command {
             let transaction_count = block.transactions.len() as u64;
 
             debug!(target: "reth-bench", ?block_number, "Sending payload");
-
-            let bal = fetch_block_access_list(&block_provider, block.header.number).await?;
 
             let forkchoice_state = ForkchoiceState {
                 head_block_hash: head,

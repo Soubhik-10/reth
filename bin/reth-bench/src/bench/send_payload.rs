@@ -81,6 +81,8 @@ impl Command {
 
         let use_v4 = block.header.requests_hash.is_some();
 
+        let use_v5 = block.block_access_list_hash.is_some();
+
         // Create JSON request data
         let json_request = if use_v4 {
             serde_json::to_string(&(
@@ -102,7 +104,13 @@ impl Command {
             Mode::Execute => {
                 // Create cast command
                 let mut command = std::process::Command::new("cast");
-                let method = if use_v4 { "engine_newPayloadV4" } else { "engine_newPayloadV3" };
+                let method = if use_v5 {
+                    "engine_newPayloadV5"
+                } else if use_v4 {
+                    "engine_newPayloadV4"
+                } else {
+                    "engine_newPayloadV3"
+                };
                 command.arg("rpc").arg(method).arg("--raw");
                 if let Some(rpc_url) = self.rpc_url {
                     command.arg("--rpc-url").arg(rpc_url);

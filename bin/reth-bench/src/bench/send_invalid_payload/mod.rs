@@ -3,7 +3,7 @@
 mod invalidation;
 use invalidation::InvalidationConfig;
 
-use crate::bench::helpers::{fetch_block_access_list, fetch_block_access_list_with_rpc};
+use crate::bench::helpers::fetch_block_access_list_with_rpc;
 
 use super::helpers::{load_jwt_secret, read_input};
 use alloy_consensus::TxEnvelope;

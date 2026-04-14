@@ -18,9 +18,8 @@ use alloy_primitives::B256;
 use alloy_provider::{network::AnyNetwork, Provider, RootProvider};
 use alloy_rpc_client::ClientBuilder;
 use alloy_rpc_types_engine::{
-    CancunPayloadFields, ExecutionData, ExecutionPayload, ExecutionPayloadEnvelopeV4,
-    ExecutionPayloadEnvelopeV6, ExecutionPayloadSidecar, ExecutionPayloadV4, ForkchoiceState,
-    JwtSecret, PraguePayloadFields,
+    CancunPayloadFields, ExecutionData, ExecutionPayload, ExecutionPayloadEnvelopeV6,
+    ExecutionPayloadSidecar, ExecutionPayloadV4, ForkchoiceState, JwtSecret, PraguePayloadFields,
 };
 use clap::Parser;
 use eyre::Context;
@@ -485,7 +484,7 @@ impl Command {
                 let envelope: ExecutionPayloadEnvelopeV6 = serde_json::from_str(&content)
                     .wrap_err_with(|| format!("Failed to parse {:?}", path))?;
                 let execution_data = ExecutionData {
-                    payload: envelope.envelope_inner.execution_payload.clone().into(),
+                    payload: envelope.execution_payload.clone().into(),
                     sidecar: ExecutionPayloadSidecar::v4(
                         CancunPayloadFields {
                             versioned_hashes: Vec::new(),
