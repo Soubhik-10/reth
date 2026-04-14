@@ -5,9 +5,8 @@ use alloy_eips::{
     eip4844::BlobTransactionSidecar,
     eip7594::{BlobTransactionSidecarEip7594, BlobTransactionSidecarVariant},
     eip7685::Requests,
-    eip7928::BlockAccessList,
 };
-use alloy_primitives::U256;
+use alloy_primitives::{Bytes, U256};
 use alloy_rpc_types_engine::{
     BlobsBundleV1, BlobsBundleV2, ExecutionPayloadEnvelopeV2, ExecutionPayloadEnvelopeV3,
     ExecutionPayloadEnvelopeV4, ExecutionPayloadEnvelopeV5, ExecutionPayloadEnvelopeV6,
@@ -38,7 +37,7 @@ pub struct EthBuiltPayload<N: NodePrimitives = EthPrimitives> {
     /// The requests of the payload
     pub(crate) requests: Option<Requests>,
     /// The block access list of the payload
-    pub(crate) block_access_list: Option<BlockAccessList>,
+    pub(crate) block_access_list: Option<Bytes>,
 }
 
 // === impl BuiltPayload ===
@@ -51,7 +50,7 @@ impl<N: NodePrimitives> EthBuiltPayload<N> {
         block: Arc<SealedBlock<N::Block>>,
         fees: U256,
         requests: Option<Requests>,
-        block_access_list: Option<BlockAccessList>,
+        block_access_list: Option<Bytes>,
     ) -> Self {
         Self { block, fees, requests, sidecars: BlobSidecars::Empty, block_access_list }
     }
@@ -156,9 +155,12 @@ impl EthBuiltPayload {
 
     /// Try converting built payload into [`ExecutionPayloadEnvelopeV6`].
     ///
-    /// Note: Amsterdam fork is not yet implemented, so this conversion is not yet supported.
+    /// Returns an error if the block access list is missing, as it's required for V6 envelopes.
     pub fn try_into_v6(self) -> Result<ExecutionPayloadEnvelopeV6, BuiltPayloadConversionError> {
         let Self { block, fees, sidecars, requests, block_access_list, .. } = self;
+
+        let block_access_list =
+            block_access_list.ok_or(BuiltPayloadConversionError::MissingBlockAccessList)?;
 
         let blobs_bundle = match sidecars {
             BlobSidecars::Empty => BlobsBundleV2::empty(),
@@ -171,7 +173,7 @@ impl EthBuiltPayload {
             execution_payload: ExecutionPayloadV4::from_block_unchecked_with_bal(
                 block.hash(),
                 &Arc::unwrap_or_clone(block).into_block(),
-                alloy_rlp::encode(block_access_list.unwrap_or_default()).into(),
+                block_access_list,
             ),
             block_value: fees,
             // From the engine API spec:

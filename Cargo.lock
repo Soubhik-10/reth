@@ -8422,7 +8422,6 @@ version = "2.0.0"
 dependencies = [
  "alloy-eips 2.0.0",
  "alloy-primitives",
- "alloy-rlp",
  "alloy-rpc-types-engine",
  "reth-engine-primitives",
  "reth-ethereum-primitives",
