@@ -1104,7 +1104,7 @@ where
         requests: RequestsOrHash,
     ) -> RpcResult<PayloadStatus> {
         trace!(target: "rpc::engine", "Serving engine_newPayloadV5");
-        // Accept requests as a hash only if it is explicitly allowed
+        // Accept requests as a hash only if it is explicitly allowed.
         if requests.is_hash() && !self.inner.accept_execution_requests_hash {
             return Err(EngineApiError::UnexpectedRequestsHash.into());
         }
