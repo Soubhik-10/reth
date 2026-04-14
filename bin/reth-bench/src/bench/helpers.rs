@@ -69,6 +69,21 @@ pub(crate) fn parse_duration(s: &str) -> eyre::Result<Duration> {
     }
 }
 
+/// Fetches the block access list for a given block number using the provided provider.
+pub(crate) async fn fetch_block_access_list(
+    provider: &RootProvider<AnyNetwork>,
+    block_number: u64,
+) -> eyre::Result<BlockAccessList> {
+    provider
+        .client()
+        .request("eth_getBlockAccessListByBlockNumber", (BlockNumberOrTag::Number(block_number),))
+        .await
+        .map_err(Into::into)
+        .and_then(|block_access_list: Option<BlockAccessList>| {
+            block_access_list.ok_or_else(|| eyre::eyre!("BAL not found for block {block_number}"))
+        })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
