@@ -19,7 +19,8 @@ use alloy_provider::{network::AnyNetwork, Provider, RootProvider};
 use alloy_rpc_client::ClientBuilder;
 use alloy_rpc_types_engine::{
     CancunPayloadFields, ExecutionData, ExecutionPayload, ExecutionPayloadEnvelopeV4,
-    ExecutionPayloadSidecar, ExecutionPayloadV4, ForkchoiceState, JwtSecret, PraguePayloadFields,
+    ExecutionPayloadEnvelopeV6, ExecutionPayloadSidecar, ExecutionPayloadV4, ForkchoiceState,
+    JwtSecret, PraguePayloadFields,
 };
 use clap::Parser;
 use eyre::Context;
@@ -315,7 +316,7 @@ impl Command {
                 let requests =
                     execution_data.sidecar.requests().cloned().unwrap_or_default().to_vec();
                 (
-                    Some(EngineApiMessageVersion::V4),
+                    Some(EngineApiMessageVersion::V6),
                     serde_json::to_value((
                         execution_data.payload.clone(),
                         Vec::<B256>::new(),
@@ -481,7 +482,7 @@ impl Command {
             {
                 (big_block.execution_data, big_block.big_block_data, big_block.block_access_list)
             } else {
-                let envelope: ExecutionPayloadEnvelopeV4 = serde_json::from_str(&content)
+                let envelope: ExecutionPayloadEnvelopeV6 = serde_json::from_str(&content)
                     .wrap_err_with(|| format!("Failed to parse {:?}", path))?;
                 let execution_data = ExecutionData {
                     payload: envelope.envelope_inner.execution_payload.clone().into(),
