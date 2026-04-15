@@ -896,6 +896,7 @@ impl From<Genesis> for ChainSpec {
             (EthereumHardfork::Bpo3.boxed(), genesis.config.bpo3_time),
             (EthereumHardfork::Bpo4.boxed(), genesis.config.bpo4_time),
             (EthereumHardfork::Bpo5.boxed(), genesis.config.bpo5_time),
+            (EthereumHardfork::Amsterdam.boxed(), genesis.config.amsterdam_time),
         ];
 
         let mut time_hardforks = time_hardfork_opts
@@ -1204,7 +1205,7 @@ impl ChainSpecBuilder {
 
     /// Enable Amsterdam at genesis.
     pub fn amsterdam_activated(mut self) -> Self {
-        self = self.prague_activated();
+        self = self.osaka_activated();
         self.hardforks.insert(EthereumHardfork::Amsterdam, ForkCondition::Timestamp(0));
         self
     }
