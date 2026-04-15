@@ -219,7 +219,7 @@ pub(crate) fn block_to_new_payload(
     reth_new_payload: bool,
     wait_for_persistence: WaitForPersistence,
     no_wait_for_caches: bool,
-    bal: BlockAccessList,
+    bal: Option<BlockAccessList>,
 ) -> eyre::Result<(Option<EngineApiMessageVersion>, serde_json::Value)> {
     let block_number = block.header.number;
     let wait_for_persistence = wait_for_persistence.rpc_value(block_number);
@@ -243,7 +243,7 @@ pub(crate) fn block_to_new_payload(
         })?
         .into_consensus();
 
-    let block_access_list = alloy_rlp::encode(bal);
+    let block_access_list = alloy_rlp::encode(bal.unwrap_or_default());
 
     let (payload, sidecar) =
         ExecutionPayload::from_block_slow_with_bal(&block, block_access_list.into());

@@ -423,7 +423,7 @@ impl Command {
     /// Load and parse all payload files from the directory.
     ///
     /// Tries to load each file as a [`BigBlockPayload`] first (which includes `env_switches`),
-    /// falling back to [`ExecutionPayloadEnvelopeV4`] for backwards compatibility.
+    /// falling back to [`ExecutionPayloadEnvelopeV6`] for backwards compatibility.
     fn load_payloads(&self) -> eyre::Result<Vec<LoadedPayload>> {
         let mut payloads = Vec::new();
 
