@@ -829,10 +829,6 @@ where
         Self::debug_execution_witness_by_block_hash(self, hash, mode).await.map_err(Into::into)
     }
 
-    async fn debug_get_block_access_list(&self, _block_id: BlockId) -> RpcResult<BlockAccessList> {
-        Err(internal_rpc_err("unimplemented"))
-    }
-
     async fn debug_backtrace_at(&self, _location: &str) -> RpcResult<()> {
         Ok(())
     }
