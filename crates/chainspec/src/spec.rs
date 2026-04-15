@@ -28,7 +28,7 @@ use alloy_consensus::{
 };
 use alloy_eips::{
     eip1559::INITIAL_BASE_FEE, eip7685::EMPTY_REQUESTS_HASH, eip7840::BlobParams,
-    eip7892::BlobScheduleBlobParams,
+    eip7892::BlobScheduleBlobParams, eip7928::EMPTY_BLOCK_ACCESS_LIST_HASH,
 };
 use alloy_genesis::{ChainConfig, Genesis};
 use alloy_primitives::{address, b256, Address, BlockNumber, B256, U256};
@@ -76,6 +76,18 @@ pub fn make_genesis_header(genesis: &Genesis, hardforks: &ChainHardforks) -> Hea
         .active_at_timestamp(genesis.timestamp)
         .then_some(EMPTY_REQUESTS_HASH);
 
+    // If Amsterdam is activated at genesis we set block access list hash to an empty bal hash
+    let block_access_list_hash = hardforks
+        .fork(EthereumHardfork::Amsterdam)
+        .active_at_timestamp(genesis.timestamp)
+        .then_some(EMPTY_BLOCK_ACCESS_LIST_HASH);
+
+    // If Amsterdam is activated at genesis we set slot number to 0
+    let slot_number = hardforks
+        .fork(EthereumHardfork::Amsterdam)
+        .active_at_timestamp(genesis.timestamp)
+        .then_some(0);
+
     Header {
         number: genesis.number.unwrap_or_default(),
         parent_hash: genesis.parent_hash.unwrap_or_default(),
@@ -93,6 +105,8 @@ pub fn make_genesis_header(genesis: &Genesis, hardforks: &ChainHardforks) -> Hea
         blob_gas_used,
         excess_blob_gas,
         requests_hash,
+        block_access_list_hash,
+        slot_number,
         ..Default::default()
     }
 }
@@ -1200,7 +1214,6 @@ impl ChainSpecBuilder {
         self.hardforks.insert(EthereumHardfork::Amsterdam, ForkCondition::Timestamp(timestamp));
         self
     }
-
 
     /// Build the resulting [`ChainSpec`].
     ///
