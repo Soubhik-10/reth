@@ -297,6 +297,7 @@ pub fn create_chain_config(
         cancun_time: timestamp(EthereumHardfork::Cancun),
         prague_time: timestamp(EthereumHardfork::Prague),
         osaka_time: timestamp(EthereumHardfork::Osaka),
+        amsterdam_time: timestamp(EthereumHardfork::Amsterdam),
         bpo1_time: timestamp(EthereumHardfork::Bpo1),
         bpo2_time: timestamp(EthereumHardfork::Bpo2),
         bpo3_time: timestamp(EthereumHardfork::Bpo3),
@@ -880,6 +881,7 @@ impl From<Genesis> for ChainSpec {
             (EthereumHardfork::Bpo3.boxed(), genesis.config.bpo3_time),
             (EthereumHardfork::Bpo4.boxed(), genesis.config.bpo4_time),
             (EthereumHardfork::Bpo5.boxed(), genesis.config.bpo5_time),
+            (EthereumHardfork::Amsterdam.boxed(), genesis.config.amsterdam_time),
         ];
 
         let mut time_hardforks = time_hardfork_opts
@@ -1185,6 +1187,20 @@ impl ChainSpecBuilder {
         self.hardforks.insert(EthereumHardfork::Osaka, ForkCondition::Timestamp(timestamp));
         self
     }
+
+    /// Enable Amsterdam at genesis.
+    pub fn amsterdam_activated(mut self) -> Self {
+        self = self.osaka_activated();
+        self.hardforks.insert(EthereumHardfork::Amsterdam, ForkCondition::Timestamp(0));
+        self
+    }
+
+    /// Enable Amsterdam at the given timestamp.
+    pub fn with_amsterdam_at(mut self, timestamp: u64) -> Self {
+        self.hardforks.insert(EthereumHardfork::Amsterdam, ForkCondition::Timestamp(timestamp));
+        self
+    }
+
 
     /// Build the resulting [`ChainSpec`].
     ///
