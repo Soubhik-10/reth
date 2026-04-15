@@ -79,7 +79,7 @@ pub(crate) async fn fetch_block_access_list(
 ) -> eyre::Result<BlockAccessList> {
     provider
         .client()
-        .request("eth_getBlockAccessListRaw", (BlockNumberOrTag::Number(block_number),))
+        .request("eth_getBlockAccessListByBlockNumber", (BlockNumberOrTag::Number(block_number),))
         .await
         .map_err(Into::into)
         .and_then(|block_access_list: Option<BlockAccessList>| {
