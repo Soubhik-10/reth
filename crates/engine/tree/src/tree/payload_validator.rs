@@ -1375,7 +1375,7 @@ where
         transaction_root: Option<B256>,
         receipt_root_bloom: Option<ReceiptRootBloom>,
         hashed_state: LazyHashedPostState,
-        built_bal: Option<BlockAccessList>,
+        _built_bal: Option<BlockAccessList>,
     ) -> Result<LazyHashedPostState, InsertBlockErrorKind>
     where
         V: PayloadValidator<T, Block = N::Block>,
@@ -1402,10 +1402,11 @@ where
         let _enter =
             debug_span!(target: "engine::tree::payload_validator", "validate_block_post_execution")
                 .entered();
-        let post_execution_validation =
-            self.consensus.validate_block_post_execution(block, output, receipt_root_bloom);
-        drop(built_bal);
-        if let Err(err) = post_execution_validation {
+
+        if let Err(err) =
+            self.consensus.validate_block_post_execution(block, output, receipt_root_bloom) // ToDo: pass bal for validation
+        {
+        
             // call post-block hook
             self.on_invalid_block(parent_block, block, output, None, ctx.state_mut());
             return Err(err.into())
