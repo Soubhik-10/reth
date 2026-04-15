@@ -1404,9 +1404,9 @@ where
                 .entered();
 
         if let Err(err) =
-            self.consensus.validate_block_post_execution(block, output, receipt_root_bloom) // ToDo: pass bal for validation
+            self.consensus.validate_block_post_execution(block, output, receipt_root_bloom)
+        // ToDo: pass bal for validation
         {
-        
             // call post-block hook
             self.on_invalid_block(parent_block, block, output, None, ctx.state_mut());
             return Err(err.into())
