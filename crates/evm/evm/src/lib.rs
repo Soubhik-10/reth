@@ -506,7 +506,7 @@ pub struct NextBlockEnvAttributes {
     pub withdrawals: Option<Withdrawals>,
     /// Optional extra data.
     pub extra_data: Bytes,
-    /// Slot number (EIP-7928, Amsterdam).
+    /// Optional slot number for post-Amsterdam payloads.
     pub slot_number: Option<u64>,
 }
 

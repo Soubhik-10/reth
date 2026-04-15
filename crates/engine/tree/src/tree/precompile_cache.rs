@@ -75,7 +75,9 @@ where
     }
 }
 
-/// Cache entry, precompile successful output.
+/// Cache entry for a successful precompile output.
+///
+/// We intentionally do not cache non-successful statuses or errors.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CacheEntry<S> {
     output: PrecompileOutputExt,
@@ -187,7 +189,9 @@ where
         let result = self.precompile.call(input);
 
         match &result {
-            Ok(output) => {
+            // Only successful outputs are cacheable. Non-success statuses and errors must execute
+            // again instead of poisoning the cache for subsequent calls.
+            Ok(output) if output.is_success() => {
                 let size = self.cache.insert(
                     Bytes::copy_from_slice(calldata),
                     CacheEntry { output: output.clone(), spec: self.spec_id.clone() },
@@ -235,16 +239,22 @@ mod tests {
     use super::*;
     use reth_evm::{EthEvmFactory, Evm, EvmEnv, EvmFactory};
     use reth_revm::db::EmptyDB;
-    use revm::{context::TxEnv, interpreter::gas::GasTracker};
+    use revm::{
+        context::TxEnv,
+        precompile::{PrecompileOutput, PrecompileStatus},
+    };
     use revm_primitives::hardfork::SpecId;
 
     #[test]
     fn test_precompile_cache_basic() {
-        let dyn_precompile: DynPrecompile = (|_input: PrecompileInput<'_>| -> PrecompileResultExt {
-            Ok(PrecompileOutputExt {
-                gas: GasTracker::new(0, 0, 0),
+        let dyn_precompile: DynPrecompile = (|_input: PrecompileInput<'_>| -> PrecompileResult {
+            Ok(PrecompileOutput {
+                status: PrecompileStatus::Success,
+                gas_used: 0,
+                state_gas_used: 0,
+                reservoir: 0,
                 bytes: Bytes::default(),
-                reverted: false,
+                gas_refunded: 0,
             })
         })
         .into();
@@ -252,10 +262,13 @@ mod tests {
         let cache =
             CachedPrecompile::new(dyn_precompile, PrecompileCache::default(), SpecId::PRAGUE, None);
 
-        let output = PrecompileOutputExt {
-            gas: GasTracker::new(50, 0, 0),
+        let output = PrecompileOutput {
+            status: PrecompileStatus::Success,
+            gas_used: 50,
+            state_gas_used: 0,
+            reservoir: 0,
+            gas_refunded: 0,
             bytes: alloy_primitives::Bytes::copy_from_slice(b"cached_result"),
-            reverted: false,
         };
 
         let input = b"test_input";
@@ -283,10 +296,13 @@ mod tests {
             move |input: PrecompileInput<'_>| -> PrecompileResultExt {
                 assert_eq!(input.data, input_data);
 
-                Ok(PrecompileOutputExt {
-                    gas: GasTracker::new(5000, 0, 0),
+                Ok(PrecompileOutput {
+                    status: PrecompileStatus::Success,
+                    gas_used: 5000,
+                    state_gas_used: 0,
+                    reservoir: 0,
+                    gas_refunded: 0,
                     bytes: alloy_primitives::Bytes::copy_from_slice(b"output_from_precompile_1"),
-                    reverted: false,
                 })
             }
         })
@@ -297,10 +313,13 @@ mod tests {
             move |input: PrecompileInput<'_>| -> PrecompileResultExt {
                 assert_eq!(input.data, input_data);
 
-                Ok(PrecompileOutputExt {
-                    gas: GasTracker::new(7000, 0, 0),
+                Ok(PrecompileOutput {
+                    status: PrecompileStatus::Success,
+                    gas_used: 7000,
+                    state_gas_used: 0,
+                    reservoir: 0,
+                    gas_refunded: 0,
                     bytes: alloy_primitives::Bytes::copy_from_slice(b"output_from_precompile_2"),
-                    reverted: false,
                 })
             }
         })
