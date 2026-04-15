@@ -3,6 +3,7 @@
 //! before sending additional calls.
 
 use alloy_consensus::TxEnvelope;
+use alloy_eip7928::block_access_list;
 use alloy_eips::eip7928::BlockAccessList;
 use alloy_primitives::Bytes;
 use alloy_provider::{ext::EngineApi, network::AnyRpcBlock, Network, Provider};
@@ -242,8 +243,11 @@ pub(crate) fn block_to_new_payload(
             tx.try_into().map_err(|_| eyre::eyre!("unsupported tx type"))
         })?
         .into_consensus();
+
+    let block_access_list=alloy_rlp::encode(bal);
+
     let (payload, sidecar) =
-        ExecutionPayload::from_block_slow_with_bal(&block, block_access_list.unwrap_or_default());
+        ExecutionPayload::from_block_slow_with_bal(&block, block_access_list.into())?;
     let (version, params, execution_data) = payload_to_new_payload(payload, sidecar, None)?;
 
     if reth_new_payload {
