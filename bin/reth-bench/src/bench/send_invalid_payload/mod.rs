@@ -7,7 +7,7 @@ use invalidation::InvalidationConfig;
 use crate::bench::helpers::fetch_block_access_list;
 
 use super::helpers::{load_jwt_secret, read_input};
-use alloy_consensus::{BlockHeader, TxEnvelope};
+use alloy_consensus::TxEnvelope;
 use alloy_primitives::{Address, B256};
 use alloy_provider::{
     network::{AnyNetwork, AnyRpcBlock},
@@ -252,8 +252,13 @@ impl Command {
             .http(self.rpc_url.clone().unwrap_or_default().parse()?);
         let provider = RootProvider::<AnyNetwork>::new(client);
 
-        let bal =
-            alloy_rlp::encode(fetch_block_access_list(&provider, block.header.number()).await?);
+        let bal = if block.header.block_access_list_hash.is_some() {
+            Some(fetch_block_access_list(&provider, block.header.number).await?)
+        } else {
+            None
+        };
+
+        let encoded_bal = alloy_rlp::encode(bal.unwrap_or_default());
 
         let config = self.build_invalidation_config();
 
@@ -266,7 +271,7 @@ impl Command {
         let requests_hash = self.requests_hash.or(block.header.requests_hash);
 
         let mut execution_payload =
-            ExecutionPayload::from_block_slow_with_bal(&block, bal.into()).0;
+            ExecutionPayload::from_block_slow_with_bal(&block, encoded_bal.into()).0;
 
         let changes = match &mut execution_payload {
             ExecutionPayload::V1(p) => config.apply_to_payload_v1(p),
