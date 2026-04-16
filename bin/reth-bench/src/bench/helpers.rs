@@ -1,9 +1,8 @@
 //! Common helpers for reth-bench commands.
 
 use alloy_eips::{eip7928::BlockAccessList, BlockNumberOrTag};
-use alloy_primitives::{Bytes, B256};
 use alloy_provider::{network::AnyNetwork, Provider, RootProvider};
-use eyre::{eyre, Result};
+use eyre::Result;
 use std::{
     io::{BufReader, Read},
     time::Duration,
