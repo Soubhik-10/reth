@@ -87,32 +87,6 @@ pub(crate) async fn fetch_block_access_list(
         })
 }
 
-/// Fetches the block access list for a given block hash using a direct RPC call.
-pub(crate) async fn fetch_block_access_list_with_rpc(
-    rpc_url: &str,
-    block_hash: B256,
-) -> eyre::Result<Bytes> {
-    let client = reqwest::Client::new();
-
-    let request = serde_json::json!({
-        "jsonrpc": "2.0",
-        "method": "eth_getBlockAccessListByBlockHash",
-        "params": [format!("{:#x}", block_hash)],
-        "id": 1
-    });
-
-    let response =
-        client.post(rpc_url).json(&request).send().await?.json::<serde_json::Value>().await?;
-
-    let result = response.get("result").ok_or_else(|| eyre!("Missing result field"))?;
-
-    let bal: BlockAccessList = serde_json::from_value(result.clone())
-        .map_err(|e| eyre!("Failed to deserialize BlockAccessList: {e}"))?;
-
-    let bytes = alloy_rlp::encode(bal);
-    Ok(bytes.into())
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

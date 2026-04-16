@@ -1,14 +1,18 @@
 //! Command for sending invalid payloads to test Engine API rejection.
 
 mod invalidation;
+use alloy_rpc_client::ClientBuilder;
 use invalidation::InvalidationConfig;
 
-use crate::bench::helpers::fetch_block_access_list_with_rpc;
+use crate::bench::helpers::fetch_block_access_list;
 
 use super::helpers::{load_jwt_secret, read_input};
-use alloy_consensus::TxEnvelope;
+use alloy_consensus::{BlockHeader, TxEnvelope};
 use alloy_primitives::{Address, B256};
-use alloy_provider::network::AnyRpcBlock;
+use alloy_provider::{
+    network::{AnyNetwork, AnyRpcBlock},
+    RootProvider,
+};
 use alloy_rpc_types_engine::ExecutionPayload;
 use clap::Parser;
 use eyre::{OptionExt, Result};
@@ -243,11 +247,13 @@ impl Command {
             })?
             .into_consensus();
 
-        let bal = fetch_block_access_list_with_rpc(
-            &self.rpc_url.clone().unwrap_or_default(),
-            block.header.hash_slow(),
-        )
-        .await?;
+        let client = ClientBuilder::default()
+            .layer(alloy_transport::layers::RetryBackoffLayer::new(10, 800, u64::MAX))
+            .http(self.rpc_url.clone().unwrap_or_default().parse()?);
+        let provider = RootProvider::<AnyNetwork>::new(client);
+
+        let bal =
+            alloy_rlp::encode(fetch_block_access_list(&provider, block.header.number()).await?);
 
         let config = self.build_invalidation_config();
 
@@ -259,7 +265,8 @@ impl Command {
         let use_v5 = block.header.block_access_list_hash.is_some();
         let requests_hash = self.requests_hash.or(block.header.requests_hash);
 
-        let mut execution_payload = ExecutionPayload::from_block_slow_with_bal(&block, bal).0;
+        let mut execution_payload =
+            ExecutionPayload::from_block_slow_with_bal(&block, bal.into()).0;
 
         let changes = match &mut execution_payload {
             ExecutionPayload::V1(p) => config.apply_to_payload_v1(p),
