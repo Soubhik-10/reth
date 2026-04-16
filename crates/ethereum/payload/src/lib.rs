@@ -371,7 +371,7 @@ where
                     block_available_gas,
                 },
             )) => {
-                trace!(target: "payload_builder", %transaction_gas_limit, %block_available_gas, ?tx.hash(), "skipping transaction exceeding block gas limit");
+                trace!(target: "payload_builder", %transaction_gas_limit, %block_available_gas, ?tx_hash, "skipping transaction exceeding block gas limit");
                 best_txs.mark_invalid(
                     &pool_tx,
                     &InvalidPoolTransactionError::ExceedsGasLimit(
