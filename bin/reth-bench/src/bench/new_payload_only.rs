@@ -126,7 +126,7 @@ impl Command {
 
             debug!(target: "reth-bench", number=?block.header.number, "Sending payload to engine");
 
-            let bal = if block.header.block_access_list_hash.is_some() {
+            let bal = if rlp.is_none() && block.header.block_access_list_hash.is_some() {
                 Some(fetch_block_access_list(&block_provider, block.header.number).await?)
             } else {
                 None

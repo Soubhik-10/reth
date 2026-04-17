@@ -1,6 +1,11 @@
-use super::helpers::{load_jwt_secret, read_input};
+use super::helpers::{fetch_block_access_list, load_jwt_secret, read_input};
 use alloy_consensus::TxEnvelope;
-use alloy_provider::network::AnyRpcBlock;
+use alloy_primitives::Bytes;
+use alloy_provider::{
+    network::{AnyNetwork, AnyRpcBlock},
+    RootProvider,
+};
+use alloy_rpc_client::ClientBuilder;
 use alloy_rpc_types_engine::ExecutionPayload;
 use clap::Parser;
 use eyre::{OptionExt, Result};
@@ -52,6 +57,19 @@ enum Mode {
 }
 
 impl Command {
+    async fn fetch_encoded_block_access_list(&self, block_number: u64) -> Result<Bytes> {
+        let rpc_url = self
+            .rpc_url
+            .as_deref()
+            .ok_or_eyre("--rpc-url is required to fetch the block access list for V5 payloads")?;
+        let client = ClientBuilder::default()
+            .layer(alloy_transport::layers::RetryBackoffLayer::new(10, 800, u64::MAX))
+            .http(rpc_url.parse()?);
+        let provider = RootProvider::<AnyNetwork>::new(client);
+        let bal = fetch_block_access_list(&provider, block_number).await?;
+        Ok(alloy_rlp::encode(bal).into())
+    }
+
     /// Execute the generate payload command
     pub async fn execute(self, _ctx: CliContext) -> Result<()> {
         // Load block
@@ -69,6 +87,9 @@ impl Command {
             })?
             .into_consensus();
 
+        let use_v4 = block.header.requests_hash.is_some();
+        let use_v5 = block.header.block_access_list_hash.is_some();
+
         // Extract parent beacon block root
         let parent_beacon_block_root = block.header.parent_beacon_block_root;
 
@@ -76,12 +97,14 @@ impl Command {
         let blob_versioned_hashes =
             block.body.blob_versioned_hashes_iter().copied().collect::<Vec<_>>();
 
-        // Convert to execution payload
-        let execution_payload = ExecutionPayload::from_block_slow(&block).0;
-
-        let use_v4 = block.header.requests_hash.is_some();
-
-        let use_v5 = block.block_access_list_hash.is_some();
+        // V5 payloads must carry the full RLP-encoded block access list, not just the hash stored
+        // in the header.
+        let execution_payload = if use_v5 {
+            let encoded_bal = self.fetch_encoded_block_access_list(block.header.number).await?;
+            ExecutionPayload::from_block_slow_with_bal(&block, encoded_bal).0
+        } else {
+            ExecutionPayload::from_block_slow(&block).0
+        };
 
         // Create JSON request data
         let json_request = if use_v4 {

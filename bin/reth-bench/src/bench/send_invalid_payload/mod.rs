@@ -8,7 +8,7 @@ use crate::bench::helpers::fetch_block_access_list;
 
 use super::helpers::{load_jwt_secret, read_input};
 use alloy_consensus::TxEnvelope;
-use alloy_primitives::{Address, B256};
+use alloy_primitives::{Address, Bytes, B256};
 use alloy_provider::{
     network::{AnyNetwork, AnyRpcBlock},
     RootProvider,
@@ -234,6 +234,19 @@ impl Command {
         }
     }
 
+    async fn fetch_encoded_block_access_list(&self, block_number: u64) -> Result<Bytes> {
+        let rpc_url = self
+            .rpc_url
+            .as_deref()
+            .ok_or_eyre("--rpc-url is required to fetch the block access list for V5 payloads")?;
+        let client = ClientBuilder::default()
+            .layer(alloy_transport::layers::RetryBackoffLayer::new(10, 800, u64::MAX))
+            .http(rpc_url.parse()?);
+        let provider = RootProvider::<AnyNetwork>::new(client);
+        let bal = fetch_block_access_list(&provider, block_number).await?;
+        Ok(alloy_rlp::encode(bal).into())
+    }
+
     /// Execute the command
     pub async fn execute(self, _ctx: CliContext) -> Result<()> {
         let block_json = read_input(self.path.as_deref())?;
@@ -247,19 +260,6 @@ impl Command {
             })?
             .into_consensus();
 
-        let client = ClientBuilder::default()
-            .layer(alloy_transport::layers::RetryBackoffLayer::new(10, 800, u64::MAX))
-            .http(self.rpc_url.clone().unwrap_or_default().parse()?);
-        let provider = RootProvider::<AnyNetwork>::new(client);
-
-        let bal = if block.header.block_access_list_hash.is_some() {
-            Some(fetch_block_access_list(&provider, block.header.number).await?)
-        } else {
-            None
-        };
-
-        let encoded_bal = alloy_rlp::encode(bal.unwrap_or_default());
-
         let config = self.build_invalidation_config();
 
         let parent_beacon_block_root =
@@ -270,8 +270,12 @@ impl Command {
         let use_v5 = block.header.block_access_list_hash.is_some();
         let requests_hash = self.requests_hash.or(block.header.requests_hash);
 
-        let mut execution_payload =
-            ExecutionPayload::from_block_slow_with_bal(&block, encoded_bal.into()).0;
+        let mut execution_payload = if use_v5 {
+            let encoded_bal = self.fetch_encoded_block_access_list(block.header.number).await?;
+            ExecutionPayload::from_block_slow_with_bal(&block, encoded_bal).0
+        } else {
+            ExecutionPayload::from_block_slow(&block).0
+        };
 
         let changes = match &mut execution_payload {
             ExecutionPayload::V1(p) => config.apply_to_payload_v1(p),
