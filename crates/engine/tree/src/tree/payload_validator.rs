@@ -992,7 +992,7 @@ where
         debug_span!(target: "engine::tree", "merge_transitions")
             .in_scope(|| db.merge_transitions(BundleRetention::Reverts));
 
-        // Extract the built bal is payload has bal
+        // Extract the built bal if payload has bal
         let built_bal = if has_bal { db.take_built_alloy_bal() } else { None };
 
         let output = BlockExecutionOutput { result, state: db.take_bundle() };
