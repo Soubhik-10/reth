@@ -276,11 +276,7 @@ where
             gas_limit: payload.payload.gas_limit(),
             basefee: payload.payload.saturated_base_fee_per_gas(),
             blob_excess_gas_and_price,
-            slot_num: if spec >= SpecId::AMSTERDAM {
-                payload.payload.as_v4().unwrap().slot_number
-            } else {
-                Default::default()
-            },
+            slot_num: payload.payload.as_v4().map(|v4| v4.slot_number).unwrap_or_default(),
         };
 
         Ok(EvmEnv { cfg_env, block_env })
