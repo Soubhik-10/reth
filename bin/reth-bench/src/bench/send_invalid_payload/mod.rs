@@ -234,19 +234,6 @@ impl Command {
         }
     }
 
-    async fn fetch_encoded_block_access_list(&self, block_number: u64) -> Result<Bytes> {
-        let rpc_url = self
-            .rpc_url
-            .as_deref()
-            .ok_or_eyre("--rpc-url is required to fetch the block access list for V5 payloads")?;
-        let client = ClientBuilder::default()
-            .layer(alloy_transport::layers::RetryBackoffLayer::new(10, 800, u64::MAX))
-            .http(rpc_url.parse()?);
-        let provider = RootProvider::<AnyNetwork>::new(client);
-        let bal = fetch_block_access_list(&provider, block_number).await?;
-        Ok(alloy_rlp::encode(bal).into())
-    }
-
     /// Execute the command
     pub async fn execute(self, _ctx: CliContext) -> Result<()> {
         let block_json = read_input(self.path.as_deref())?;
@@ -397,5 +384,18 @@ impl Command {
         }
 
         Ok(())
+    }
+
+    async fn fetch_encoded_block_access_list(&self, block_number: u64) -> Result<Bytes> {
+        let rpc_url = self
+            .rpc_url
+            .as_deref()
+            .ok_or_eyre("--rpc-url is required to fetch the block access list for V5 payloads")?;
+        let client = ClientBuilder::default()
+            .layer(alloy_transport::layers::RetryBackoffLayer::new(10, 800, u64::MAX))
+            .http(rpc_url.parse()?);
+        let provider = RootProvider::<AnyNetwork>::new(client);
+        let bal = fetch_block_access_list(&provider, block_number).await?;
+        Ok(alloy_rlp::encode(bal).into())
     }
 }
