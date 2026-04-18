@@ -31,6 +31,13 @@ jobs:
     timeout-minutes: 45
     runs-on:
       group: Reth
+    strategy:
+      fail-fast: false
+      matrix:
+        variant:
+          - amsterdam
+          - osaka
+    name: Prepare Hive - ${{ matrix.variant == 'amsterdam' && 'Amsterdam' || 'Osaka' }}
     steps:
       - uses: actions/checkout@v6
       - name: Checkout hive tests
@@ -54,11 +61,11 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ./hive_assets
-          key: hive-assets-${{ steps.hive-commit.outputs.hash }}-${{ hashFiles('.github/scripts/hive/build_simulators.sh') }}
+          key: hive-assets-${{ matrix.variant }}-${{ steps.hive-commit.outputs.hash }}-${{ hashFiles('.github/scripts/hive/build_simulators.sh') }}
 
       - name: Build hive assets
         if: steps.cache-hive.outputs.cache-hit != 'true'
-        run: .github/scripts/hive/build_simulators.sh
+        run: .github/scripts/hive/build_simulators.sh ${{ matrix.variant }}
 
       - name: Load cached Docker images
         if: steps.cache-hive.outputs.cache-hit == 'true'
@@ -76,13 +83,14 @@ jobs:
       - name: Upload hive assets
         uses: actions/upload-artifact@v7
         with:
-          name: hive_assets
+          name: hive_assets_${{ matrix.variant }}
           path: ./hive_assets
   test:
     timeout-minutes: 120
     strategy:
       fail-fast: false
       matrix:
+        hive_variant: [amsterdam, osaka]
         storage: [stable]
         # ethereum/rpc to be deprecated:
         # https://github.com/ethereum/hive/pull/1117
@@ -189,7 +197,7 @@ jobs:
     needs:
       - prepare-reth-stable
       - prepare-hive
-    name: ${{ matrix.storage }} / ${{ matrix.scenario.sim }}${{ matrix.scenario.limit && format(' - {0}', matrix.scenario.limit) }}
+    name: Hive-${{ matrix.hive_variant == 'amsterdam' && 'Amsterdam' || 'Osaka' }} / ${{ matrix.storage }} / ${{ matrix.scenario.sim }}${{ matrix.scenario.limit && format(' - {0}', matrix.scenario.limit) }}
     # Use larger runners for eels tests to avoid OOM runner crashes
     runs-on: ${{ github.repository == 'paradigmxyz/reth' && (contains(matrix.scenario.sim, 'eels') && 'depot-ubuntu-latest-8' || 'depot-ubuntu-latest-4') || 'ubuntu-latest' }}
     permissions:
@@ -202,7 +210,7 @@ jobs:
       - name: Download hive assets
         uses: actions/download-artifact@v8
         with:
-          name: hive_assets
+          name: hive_assets_${{ matrix.hive_variant }}
           path: /tmp
 
       - name: Download reth image
