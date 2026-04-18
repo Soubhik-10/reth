@@ -48,7 +48,7 @@ use crate::tree::{
     PayloadHandle, StateProviderBuilder, StateProviderDatabase, TreeConfig, WaitForCaches,
 };
 use alloy_consensus::transaction::{Either, TxHashRef};
-use alloy_eip7928::{bal::Bal, BlockAccessList};
+use alloy_eip7928::{bal::Bal, total_bal_items, BlockAccessList, ITEM_COST};
 use alloy_eips::{eip1898::BlockWithParent, eip4895::Withdrawal, NumHash};
 use alloy_evm::Evm;
 use alloy_primitives::{map::B256Set, B256};
@@ -906,6 +906,24 @@ where
         Evm: ConfigureEngineEvm<T::ExecutionData, Primitives = N>,
     {
         debug!(target: "engine::tree::payload_validator", "Executing block");
+
+        let has_bal = input.block_access_list().is_some();
+        if has_bal {
+            let bal = input
+                .block_access_list()
+                .transpose()
+                .map_err(BlockExecutionError::other)?
+                .unwrap_or_default();
+
+            let bal_items = total_bal_items(&bal);
+
+            if bal_items > input.gas_limit() / ITEM_COST as u64 {
+                debug!(target: "engine::tree::payload_validator", bal_items, "{} {}", input.gas_limit(), "BAL is invalid since it contains more items than the gas limit allows");
+                return Err(InsertBlockErrorKind::Consensus(
+                    ConsensusError::BlockAccessListCostMoreThanGasLimit,
+                ));
+            }
+        }
 
         let mut db = debug_span!(target: "engine::tree", "build_state_db").in_scope(|| {
             State::builder()
@@ -2140,6 +2158,17 @@ impl<T: PayloadTypes> BlockOrPayload<T> {
         match self {
             Self::Payload(payload) => payload.gas_used(),
             Self::Block(block) => block.gas_used(),
+        }
+    }
+
+    /// Returns the gas limit used by the block.
+    pub fn gas_limit(&self) -> u64
+    where
+        T::ExecutionData: ExecutionPayload,
+    {
+        match self {
+            Self::Payload(payload) => payload.gas_limit(),
+            Self::Block(block) => block.gas_limit(),
         }
     }
 }
