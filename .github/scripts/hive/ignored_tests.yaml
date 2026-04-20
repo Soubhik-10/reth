@@ -1,4 +1,4 @@
-# Ignored Tests Configuration
+﻿# Ignored Tests Configuration
 #
 # This file contains tests that should be ignored for various reasons (flaky, known issues, etc).
 # These tests will be IGNORED in the CI results - they won't cause the build to fail
