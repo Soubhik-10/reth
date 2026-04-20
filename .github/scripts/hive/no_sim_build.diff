@@ -1,4 +1,4 @@
-﻿diff --git a/internal/libdocker/builder.go b/internal/libdocker/builder.go
+diff --git a/internal/libdocker/builder.go b/internal/libdocker/builder.go
 index e4bf99b6..2023f7e2 100644
 --- a/internal/libdocker/builder.go
 +++ b/internal/libdocker/builder.go
