@@ -474,6 +474,23 @@ impl ConsensusError {
     }
 }
 
+/// Validates the block access list against the gas limit.
+///
+/// EIP-7925 specifies that the total cost of the block access list items must not exceed
+/// the gas limit. Each item costs `ITEM_COST` gas.
+pub fn validate_block_access_list_gas(
+    block_access_list: Option<&alloy_eip7928::BlockAccessList>,
+    gas_limit: u64,
+) -> Result<(), ConsensusError> {
+    if let Some(bal) = block_access_list {
+        let bal_items = alloy_eip7928::total_bal_items(bal);
+        if bal_items > gas_limit / alloy_eip7928::ITEM_COST as u64 {
+            return Err(ConsensusError::BlockAccessListCostMoreThanGasLimit)
+        }
+    }
+    Ok(())
+}
+
 impl From<InvalidTransactionError> for ConsensusError {
     fn from(value: InvalidTransactionError) -> Self {
         Self::InvalidTransaction(value)

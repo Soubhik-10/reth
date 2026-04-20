@@ -48,7 +48,7 @@ use crate::tree::{
     PayloadHandle, StateProviderBuilder, StateProviderDatabase, TreeConfig, WaitForCaches,
 };
 use alloy_consensus::transaction::{Either, TxHashRef};
-use alloy_eip7928::{bal::Bal, total_bal_items, BlockAccessList, ITEM_COST};
+use alloy_eip7928::{bal::Bal, BlockAccessList};
 use alloy_eips::{eip1898::BlockWithParent, eip4895::Withdrawal, NumHash};
 use alloy_evm::Evm;
 use alloy_primitives::{map::B256Set, B256};
@@ -59,7 +59,9 @@ use crate::tree::payload_processor::receipt_root_task::{IndexedReceipt, ReceiptR
 use reth_chain_state::{
     CanonicalInMemoryState, DeferredTrieData, ExecutedBlock, ExecutionTimingStats, LazyOverlay,
 };
-use reth_consensus::{ConsensusError, FullConsensus, ReceiptRootBloom};
+use reth_consensus::{
+    validate_block_access_list_gas, ConsensusError, FullConsensus, ReceiptRootBloom,
+};
 use reth_engine_primitives::{
     ConfigureEngineEvm, ExecutableTxIterator, ExecutionPayload, InvalidBlockHook, PayloadValidator,
 };
@@ -907,22 +909,13 @@ where
     {
         debug!(target: "engine::tree::payload_validator", "Executing block");
 
-        let has_bal = input.block_access_list().is_some();
-        if has_bal {
-            let bal = input
-                .block_access_list()
-                .transpose()
-                .map_err(BlockExecutionError::other)?
-                .unwrap_or_default();
-
-            let bal_items = total_bal_items(&bal);
-
-            if bal_items > input.gas_limit() / ITEM_COST as u64 {
-                debug!(target: "engine::tree::payload_validator", bal_items, "{} {}", input.gas_limit(), "BAL is invalid since it contains more items than the gas limit allows");
-                return Err(InsertBlockErrorKind::Consensus(
-                    ConsensusError::BlockAccessListCostMoreThanGasLimit,
-                ));
-            }
+        if let Some(bal_opt) = input.block_access_list() {
+            let bal = bal_opt.map_err(BlockExecutionError::other)?;
+            validate_block_access_list_gas(Some(&bal), input.gas_limit())
+                .map_err(|e| {
+                    debug!(target: "engine::tree::payload_validator", "BAL is invalid since it contains more items than the gas limit allows");
+                    InsertBlockErrorKind::Consensus(e)
+                })?
         }
 
         let mut db = debug_span!(target: "engine::tree", "build_state_db").in_scope(|| {
