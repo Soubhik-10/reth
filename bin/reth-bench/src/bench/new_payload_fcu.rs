@@ -202,7 +202,9 @@ impl Command {
                 finalized_block_hash: finalized,
             };
 
-            let bal = if rlp.is_none() && (block.header.block_access_list_hash.is_some() || self.enable_bal) {
+            let bal = if rlp.is_none() &&
+                (block.header.block_access_list_hash.is_some() || self.enable_bal)
+            {
                 Some(fetch_block_access_list(&block_provider, block.header.number).await?)
             } else {
                 None
