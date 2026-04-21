@@ -1,5 +1,5 @@
 [workspace.package]
-version = "2.0.0"
+version = "2.1.0"
 edition = "2024"
 rust-version = "1.93"
 license = "MIT OR Apache-2.0"
@@ -507,6 +507,7 @@ eyre = "0.6"
 fdlimit = "0.3.0"
 fixed-map = { version = "0.9", default-features = false }
 humantime = "2.1"
+imbl = "7"
 humantime-serde = "1.1"
 itertools = { version = "0.14", default-features = false }
 linked_hash_set = "0.1"
