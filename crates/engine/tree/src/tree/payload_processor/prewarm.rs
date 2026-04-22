@@ -18,7 +18,7 @@ use crate::tree::{
     StateProviderBuilder,
 };
 use alloy_consensus::transaction::TxHashRef;
-use alloy_eip7928::BlockAccessList;
+use alloy_eip7928::{bal::DecodedBal, BlockAccessList};
 use alloy_eips::eip4895::Withdrawal;
 use alloy_primitives::{keccak256, StorageKey, B256};
 use crossbeam_channel::Sender as CrossbeamSender;
@@ -48,7 +48,7 @@ pub enum PrewarmMode<Tx> {
     /// Prewarm by executing transactions from a stream, each paired with its block index.
     Transactions(Receiver<(usize, Tx)>),
     /// Prewarm by prefetching slots from a Block Access List.
-    BlockAccessList(Arc<BlockAccessList>),
+    BlockAccessList(Arc<DecodedBal>),
     /// Transaction prewarming is skipped (e.g. small blocks where the overhead exceeds the
     /// benefit). No workers are spawned.
     Skipped,
@@ -455,7 +455,7 @@ where
                 self.spawn_txs_prewarm(pending, actions_tx, self.to_sparse_trie_task.clone());
             }
             PrewarmMode::BlockAccessList(bal) => {
-                self.run_bal_prewarm(bal, actions_tx);
+                self.run_bal_prewarm(bal.into_bal().into_inner(), actions_tx);
             }
             PrewarmMode::Skipped => {
                 let _ = actions_tx

@@ -512,9 +512,7 @@ where
                 } else if let Some(decoded_bal) =
                     maybe_decoded_bal.filter(|_| !disable_bal_parallel_execution)
                 {
-                    PrewarmMode::BlockAccessList(Arc::new(
-                        decoded_bal.as_bal().clone().into_inner(),
-                    ))
+                    PrewarmMode::BlockAccessList(decoded_bal)
                 } else {
                     PrewarmMode::Transactions(transactions)
                 };

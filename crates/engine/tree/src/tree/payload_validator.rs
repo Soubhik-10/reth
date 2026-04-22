@@ -491,12 +491,9 @@ where
             .in_scope(|| self.evm_env_for(&input))
             .map_err(NewPayloadError::other)?;
 
-        // Extract the BAL, if valid and available
+        // Extract the decoded BAL, if valid and available.
         let decoded_bal = ensure_ok!(input
-            .block_access_list_raw()
-            .cloned()
-            .map(DecodedBal::from_rlp_bytes)
-            .transpose()
+            .try_decoded_block_access_list()
             .map_err(|err| { Box::<dyn std::error::Error + Send + Sync>::from(err) }))
         .map(Arc::new);
 
@@ -2114,6 +2111,17 @@ impl<T: PayloadTypes> BlockOrPayload<T> {
         match self {
             Self::Payload(payload) => payload.block_access_list(),
             Self::Block(_) => None,
+        }
+    }
+
+    /// Returns the decoded block access list, if present and successfully decoded.
+    pub fn try_decoded_block_access_list(&self) -> Result<Option<DecodedBal>, alloy_rlp::Error> {
+        match self {
+            Self::Payload(payload) => payload
+                .block_access_list()
+                .map(|block_access_list| DecodedBal::from_rlp_bytes(block_access_list.clone()))
+                .transpose(),
+            Self::Block(_) => None.transpose(),
         }
     }
 
