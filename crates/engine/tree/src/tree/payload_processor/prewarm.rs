@@ -18,7 +18,7 @@ use crate::tree::{
     StateProviderBuilder,
 };
 use alloy_consensus::transaction::TxHashRef;
-use alloy_eip7928::{bal::DecodedBal, BlockAccessList};
+use alloy_eip7928::bal::DecodedBal;
 use alloy_eips::eip4895::Withdrawal;
 use alloy_primitives::{keccak256, StorageKey, B256};
 use crossbeam_channel::Sender as CrossbeamSender;
@@ -331,9 +331,10 @@ where
     #[instrument(level = "debug", target = "engine::tree::payload_processor::prewarm", skip_all)]
     fn run_bal_prewarm(
         &self,
-        bal: Arc<BlockAccessList>,
+        decoded_bal: Arc<DecodedBal>,
         actions_tx: Sender<PrewarmTaskEvent<N::Receipt>>,
     ) {
+        let bal = decoded_bal.as_bal();
         if bal.is_empty() {
             if let Some(to_sparse_trie_task) = self.to_sparse_trie_task.as_ref() {
                 let _ = to_sparse_trie_task.send(StateRootMessage::FinishedStateUpdates);
@@ -355,8 +356,8 @@ where
         let parent_span = Span::current();
         let prefetch_parent_span = parent_span.clone();
         let stream_parent_span = parent_span;
-        let prefetch_bal = Arc::clone(&bal);
-        let stream_bal = Arc::clone(&bal);
+        let prefetch_bal = Arc::clone(&decoded_bal);
+        let stream_bal = Arc::clone(&decoded_bal);
         let (prefetch_tx, prefetch_rx) = oneshot::channel();
         let (stream_tx, stream_rx) = oneshot::channel();
 
@@ -367,12 +368,12 @@ where
                     target: "engine::tree::payload_processor::prewarm",
                     parent: &prefetch_parent_span,
                     "bal_prefetch_storage",
-                    bal_accounts = prefetch_bal.len(),
+                    bal_accounts = prefetch_bal.as_bal().len(),
                 );
                 let provider_parent_span = branch_span.clone();
                 let _span = branch_span.entered();
 
-                prefetch_bal.par_iter().for_each_init(
+                prefetch_bal.as_bal().par_iter().for_each_init(
                     || {
                         (
                             prefetch_ctx.clone(),
@@ -400,12 +401,12 @@ where
                     target: "engine::tree::payload_processor::prewarm",
                     parent: &stream_parent_span,
                     "bal_hashed_state_stream",
-                    bal_accounts = stream_bal.len(),
+                    bal_accounts = stream_bal.as_bal().len(),
                 );
                 let provider_parent_span = branch_span.clone();
                 let _span = branch_span.entered();
 
-                stream_bal.par_iter().for_each_init(
+                stream_bal.as_bal().par_iter().for_each_init(
                     || (ctx.clone(), None::<Box<dyn AccountReader>>, provider_parent_span.clone()),
                     |(ctx, provider, parent_span), account_changes| {
                         ctx.send_bal_hashed_state(
@@ -455,7 +456,7 @@ where
                 self.spawn_txs_prewarm(pending, actions_tx, self.to_sparse_trie_task.clone());
             }
             PrewarmMode::BlockAccessList(bal) => {
-                self.run_bal_prewarm(Arc::new(bal.as_bal().into_inner()), actions_tx);
+                self.run_bal_prewarm(bal, actions_tx);
             }
             PrewarmMode::Skipped => {
                 let _ = actions_tx

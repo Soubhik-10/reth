@@ -2106,14 +2106,6 @@ impl<T: PayloadTypes> BlockOrPayload<T> {
         }
     }
 
-    /// Returns the raw rlp block access list embedded in a payload, if present.
-    pub fn block_access_list_raw(&self) -> Option<&Bytes> {
-        match self {
-            Self::Payload(payload) => payload.block_access_list(),
-            Self::Block(_) => None,
-        }
-    }
-
     /// Returns the decoded block access list, if present and successfully decoded.
     ///
     /// This is kept on [`BlockOrPayload`] so downloaded blocks can eventually surface an optional
