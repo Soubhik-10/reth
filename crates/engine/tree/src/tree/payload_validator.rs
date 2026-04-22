@@ -48,7 +48,10 @@ use crate::tree::{
     PayloadHandle, StateProviderBuilder, StateProviderDatabase, TreeConfig, WaitForCaches,
 };
 use alloy_consensus::transaction::{Either, TxHashRef};
-use alloy_eip7928::{bal::Bal, BlockAccessList};
+use alloy_eip7928::{
+    bal::{Bal, DecodedBal},
+    BlockAccessList,
+};
 use alloy_eips::{eip1898::BlockWithParent, eip4895::Withdrawal, NumHash};
 use alloy_evm::Evm;
 use alloy_primitives::{map::B256Set, B256};
@@ -56,6 +59,7 @@ use alloy_primitives::{map::B256Set, B256};
 use reth_trie_sparse::debug_recorder::TrieDebugRecorder;
 
 use crate::tree::payload_processor::receipt_root_task::{IndexedReceipt, ReceiptRootTaskHandle};
+use alloy_primitives::Bytes;
 use reth_chain_state::{
     CanonicalInMemoryState, DeferredTrieData, ExecutedBlock, ExecutionTimingStats, LazyOverlay,
 };
@@ -495,6 +499,10 @@ where
             transaction_count: input.transaction_count(),
             gas_used: input.gas_used(),
             withdrawals: input.withdrawals().map(|w| w.to_vec()),
+            decoded_bal: input
+                .block_access_list_raw()
+                .cloned()
+                .and_then(|raw| DecodedBal::from_rlp_bytes(raw).ok()),
         };
 
         // Plan the strategy used for state root computation.
@@ -2106,6 +2114,14 @@ impl<T: PayloadTypes> BlockOrPayload<T> {
             Self::Payload(payload) => payload.block_access_list().map(|block_access_list| {
                 alloy_rlp::decode_exact::<Bal>(block_access_list.as_ref()).map(Bal::into_inner)
             }),
+            Self::Block(_) => None,
+        }
+    }
+
+    /// Returns the raw rlp block access list embedded in a payload, if present.
+    pub fn block_access_list_raw(&self) -> Option<&Bytes> {
+        match self {
+            Self::Payload(payload) => payload.block_access_list(),
             Self::Block(_) => None,
         }
     }
