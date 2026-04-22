@@ -455,7 +455,7 @@ where
                 self.spawn_txs_prewarm(pending, actions_tx, self.to_sparse_trie_task.clone());
             }
             PrewarmMode::BlockAccessList(bal) => {
-                self.run_bal_prewarm(bal.into_bal().into_inner(), actions_tx);
+                self.run_bal_prewarm(Arc::new(bal.as_bal().into_inner()), actions_tx);
             }
             PrewarmMode::Skipped => {
                 let _ = actions_tx
