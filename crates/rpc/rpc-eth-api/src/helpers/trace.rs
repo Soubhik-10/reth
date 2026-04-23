@@ -312,7 +312,6 @@ pub trait Trace: LoadState<Error: FromEvmError<Self::Evm>> + Call {
                             block_number: Some(block_number),
                             block_timestamp: Some(block_timestamp),
                             base_fee: Some(base_fee),
-                            ..Default::default()
                         };
                         idx += 1;
 

@@ -19,7 +19,7 @@ use alloy_rpc_types_eth::TransactionInfo;
 use futures::{Future, StreamExt};
 use reth_chain_state::CanonStateSubscriptions;
 use reth_primitives_traits::{
-    block, BlockBody, Recovered, RecoveredBlock, SignedTransaction, TxTy, WithEncoded,
+    BlockBody, Recovered, RecoveredBlock, SignedTransaction, TxTy, WithEncoded,
 };
 use reth_rpc_convert::{transaction::RpcConvert, RpcTxReq, TransactionConversionError};
 use reth_rpc_eth_types::{
@@ -335,7 +335,6 @@ pub trait EthTransactions: LoadTransaction<Provider: BlockReaderIdExt> {
                         block_timestamp: Some(block_timestamp),
                         base_fee: base_fee_per_gas,
                         index: Some(index as u64),
-                        ..Default::default()
                     };
 
                     return Ok(Some(
@@ -412,7 +411,6 @@ pub trait EthTransactions: LoadTransaction<Provider: BlockReaderIdExt> {
                                 block_timestamp: Some(block_timestamp),
                                 base_fee: base_fee_per_gas,
                                 index: Some(index as u64),
-                                ..Default::default()
                             };
                             Ok(self.converter().fill(tx.clone().with_signer(*signer), tx_info)?)
                         })
