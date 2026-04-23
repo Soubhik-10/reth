@@ -65,7 +65,6 @@ impl<T: SignedTransaction> TransactionSource<T> {
                     block_number: Some(block_number),
                     block_timestamp: Some(block_timestamp),
                     base_fee,
-                    ..Default::default()
                 };
 
                 resp_builder.fill(transaction, tx_info)
@@ -98,7 +97,6 @@ impl<T: SignedTransaction> TransactionSource<T> {
                         block_number: Some(block_number),
                         block_timestamp: Some(block_timestamp),
                         base_fee,
-                        ..Default::default()
                     },
                 )
             }
