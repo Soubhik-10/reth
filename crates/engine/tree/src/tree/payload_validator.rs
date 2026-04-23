@@ -2106,9 +2106,6 @@ impl<T: PayloadTypes> BlockOrPayload<T> {
     }
 
     /// Returns the decoded block access list, if present and successfully decoded.
-    ///
-    /// This is kept on [`BlockOrPayload`] so downloaded blocks can eventually surface an optional
-    /// decoded BAL through the same interface.
     pub fn try_decoded_access_list(&self) -> Result<Option<DecodedBal>, alloy_rlp::Error> {
         match self {
             Self::Payload(payload) => payload
