@@ -474,9 +474,14 @@ pub enum ConsensusError {
     /// EIP-7825: Transaction gas limit exceeds maximum allowed
     #[error(transparent)]
     TransactionGasLimitTooHigh(Box<TxGasLimitTooHighErr>),
-    /// Error when an unexpected block access list cost is encountered.
-    #[error("block access list cost exceeds gas limit")]
-    BlockAccessListCostMoreThanGasLimit,
+    /// Error when the block access list cost exceeds the gas limit.
+    #[error("block access list cost ({bal_cost}) exceeds gas limit ({gas_limit})")]
+    BlockAccessListCostMoreThanGasLimit {
+        /// The actual block access list cost.
+        bal_cost: u64,
+        /// The block gas limit.
+        gas_limit: u64,
+    },
     /// Any additional consensus error, for example L2-specific errors.
     #[error(transparent)]
     Other(#[from] Arc<dyn Error + Send + Sync>),
@@ -524,7 +529,7 @@ impl ConsensusError {
 
 /// Validates the block access list against the gas limit.
 ///
-/// EIP-7925 specifies that the total cost of the block access list items must not exceed
+/// EIP-7928 specifies that the total cost of the block access list items must not exceed
 /// the gas limit. Each item costs `ITEM_COST` gas.
 pub fn validate_block_access_list_gas(
     block_access_list: Option<&alloy_eip7928::BlockAccessList>,
@@ -532,8 +537,9 @@ pub fn validate_block_access_list_gas(
 ) -> Result<(), ConsensusError> {
     if let Some(bal) = block_access_list {
         let bal_items = alloy_eip7928::total_bal_items(bal);
-        if bal_items > gas_limit / alloy_eip7928::ITEM_COST as u64 {
-            return Err(ConsensusError::BlockAccessListCostMoreThanGasLimit)
+        let bal_cost = bal_items.saturating_mul(alloy_eip7928::ITEM_COST as u64);
+        if bal_cost > gas_limit {
+            return Err(ConsensusError::BlockAccessListCostMoreThanGasLimit { bal_cost, gas_limit })
         }
     }
     Ok(())
