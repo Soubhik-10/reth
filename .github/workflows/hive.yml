@@ -142,6 +142,7 @@ jobs:
               - eth_syncing
               # debug_ rpc methods
               - debug_
+              - testing_buildBlockV1
 
           # consume-engine
           # - sim: ethereum/eels/consume-engine
