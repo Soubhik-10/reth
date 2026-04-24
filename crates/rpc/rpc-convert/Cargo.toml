@@ -27,6 +27,7 @@ alloy-evm = { workspace = true, features = ["rpc"] }
 
 # io
 jsonrpsee-types.workspace = true
+tracing.workspace = true
 
 # error
 thiserror.workspace = true

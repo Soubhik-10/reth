@@ -710,9 +710,11 @@ where
         tx_info: TransactionInfo,
     ) -> Result<Network::TransactionResponse, Self::Error> {
         let (tx, signer) = tx.into_parts();
+        tracing::info!(?tx, ?tx_info, "Filling RPC transaction response");
         let tx_info = self.mapper.try_map(&tx, tx_info)?;
-
-        self.rpc_tx_converter.convert_rpc_tx(tx, signer, tx_info).map_err(Into::into)
+        let x = self.rpc_tx_converter.convert_rpc_tx(tx, signer, tx_info).map_err(Into::into);
+        tracing::info!(?x, "Converted RPC transaction");
+        x
     }
 
     fn build_simulate_v1_transaction(
