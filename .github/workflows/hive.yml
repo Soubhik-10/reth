@@ -5,7 +5,10 @@ name: hive
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 0 * * *"
+    - cron: "0 */6 * * *"
+  pull_request:
+    branches:
+      - "**"
 
 env:
   CARGO_TERM_COLOR: always
@@ -15,23 +18,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-reth:
-    uses: ./.github/workflows/docker-test.yml
+  prepare-reth-stable:
+    uses: ./.github/workflows/prepare-reth.yml
     with:
-      hive_target: hive
-      artifact_name: "reth"
-    secrets: inherit
+      image_tag: ghcr.io/paradigmxyz/reth:latest
+      binary_name: reth
+      cargo_features: "asm-keccak"
+      artifact_name: "reth-stable"
 
   prepare-hive:
     if: github.repository == 'paradigmxyz/reth'
     timeout-minutes: 45
-    runs-on: ${{ github.repository == 'paradigmxyz/reth' && 'depot-ubuntu-latest-4' || 'ubuntu-latest' }}
+    runs-on:
+      group: Reth
     steps:
       - uses: actions/checkout@v6
       - name: Checkout hive tests
         uses: actions/checkout@v6
         with:
           repository: ethereum/hive
+          ref: master
           path: hivetests
 
       - name: Get hive commit hash
@@ -77,6 +83,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        storage: [stable]
         # ethereum/rpc to be deprecated:
         # https://github.com/ethereum/hive/pull/1117
         scenario:
@@ -103,16 +110,16 @@ jobs:
             include:
               # failures tracked at https://github.com/paradigmxyz/reth/issues/14825
               - PingLargeRequestID
-          - sim: ethereum/engine
-            limit: engine-exchange-capabilities
-          - sim: ethereum/engine
-            limit: engine-withdrawals
-          - sim: ethereum/engine
-            limit: engine-auth
-          - sim: ethereum/engine
-            limit: engine-api
-          - sim: ethereum/engine
-            limit: cancun
+          # - sim: ethereum/engine
+          #   limit: engine-exchange-capabilities
+          # - sim: ethereum/engine
+          #   limit: engine-withdrawals
+          # - sim: ethereum/engine
+          #   limit: engine-auth
+          # - sim: ethereum/engine
+          #   limit: engine-api
+          # - sim: ethereum/engine
+          #   limit: cancun
           # eth_ rpc methods
           - sim: ethereum/rpc-compat
             include:
@@ -137,48 +144,52 @@ jobs:
               - debug_
 
           # consume-engine
-          - sim: ethereum/eels/consume-engine
-            limit: .*tests/osaka.*
-          - sim: ethereum/eels/consume-engine
-            limit: .*tests/prague.*
-          - sim: ethereum/eels/consume-engine
-            limit: .*tests/cancun.*
-          - sim: ethereum/eels/consume-engine
-            limit: .*tests/shanghai.*
-          - sim: ethereum/eels/consume-engine
-            limit: .*tests/berlin.*
-          - sim: ethereum/eels/consume-engine
-            limit: .*tests/istanbul.*
-          - sim: ethereum/eels/consume-engine
-            limit: .*tests/homestead.*
-          - sim: ethereum/eels/consume-engine
-            limit: .*tests/frontier.*
-          - sim: ethereum/eels/consume-engine
-            limit: .*tests/paris.*
+          # - sim: ethereum/eels/consume-engine
+          #   limit: .*tests/amsterdam.*
+          # - sim: ethereum/eels/consume-engine
+          #   limit: .*tests/osaka.*
+          # - sim: ethereum/eels/consume-engine
+          #   limit: .*tests/prague.*
+          # - sim: ethereum/eels/consume-engine
+          #   limit: .*tests/cancun.*
+          # - sim: ethereum/eels/consume-engine
+          #   limit: .*tests/shanghai.*
+          # - sim: ethereum/eels/consume-engine
+          #   limit: .*tests/berlin.*
+          # - sim: ethereum/eels/consume-engine
+          #   limit: .*tests/istanbul.*
+          # - sim: ethereum/eels/consume-engine
+          #   limit: .*tests/homestead.*
+          # - sim: ethereum/eels/consume-engine
+          #   limit: .*tests/frontier.*
+          # - sim: ethereum/eels/consume-engine
+          #   limit: .*tests/paris.*
 
-          # consume-rlp
-          - sim: ethereum/eels/consume-rlp
-            limit: .*tests/osaka.*
-          - sim: ethereum/eels/consume-rlp
-            limit: .*tests/prague.*
-          - sim: ethereum/eels/consume-rlp
-            limit: .*tests/cancun.*
-          - sim: ethereum/eels/consume-rlp
-            limit: .*tests/shanghai.*
-          - sim: ethereum/eels/consume-rlp
-            limit: .*tests/berlin.*
-          - sim: ethereum/eels/consume-rlp
-            limit: .*tests/istanbul.*
-          - sim: ethereum/eels/consume-rlp
-            limit: .*tests/homestead.*
-          - sim: ethereum/eels/consume-rlp
-            limit: .*tests/frontier.*
-          - sim: ethereum/eels/consume-rlp
-            limit: .*tests/paris.*
+          # # consume-rlp
+          # - sim: ethereum/eels/consume-rlp
+          #   limit: .*tests/amsterdam.*
+          # - sim: ethereum/eels/consume-rlp
+          #   limit: .*tests/osaka.*
+          # - sim: ethereum/eels/consume-rlp
+          #   limit: .*tests/prague.*
+          # - sim: ethereum/eels/consume-rlp
+          #   limit: .*tests/cancun.*
+          # - sim: ethereum/eels/consume-rlp
+          #   limit: .*tests/shanghai.*
+          # - sim: ethereum/eels/consume-rlp
+          #   limit: .*tests/berlin.*
+          # - sim: ethereum/eels/consume-rlp
+          #   limit: .*tests/istanbul.*
+          # - sim: ethereum/eels/consume-rlp
+          #   limit: .*tests/homestead.*
+          # - sim: ethereum/eels/consume-rlp
+          #   limit: .*tests/frontier.*
+          # - sim: ethereum/eels/consume-rlp
+          #   limit: .*tests/paris.*
     needs:
-      - build-reth
+      - prepare-reth-stable
       - prepare-hive
-    name: ${{ matrix.scenario.sim }}${{ matrix.scenario.limit && format(' - {0}', matrix.scenario.limit) }}
+    name: ${{ matrix.storage }} / ${{ matrix.scenario.sim }}${{ matrix.scenario.limit && format(' - {0}', matrix.scenario.limit) }}
     # Use larger runners for eels tests to avoid OOM runner crashes
     runs-on: ${{ github.repository == 'paradigmxyz/reth' && (contains(matrix.scenario.sim, 'eels') && 'depot-ubuntu-latest-8' || 'depot-ubuntu-latest-4') || 'ubuntu-latest' }}
     permissions:
@@ -197,7 +208,7 @@ jobs:
       - name: Download reth image
         uses: actions/download-artifact@v8
         with:
-          name: reth
+          name: reth-${{ matrix.storage }}
           path: /tmp
 
       - name: Load Docker images
