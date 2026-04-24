@@ -328,6 +328,7 @@ reth-cli-runner = { path = "crates/cli/runner" }
 reth-cli-util = { path = "crates/cli/util" }
 reth-codecs = { git = "https://github.com/Soubhik-10/reth-core", branch = "tx-info", default-features = false }
 reth-codecs-derive = { git = "https://github.com/Soubhik-10/reth-core", branch = "tx-info"}
+reth-config = { path = "crates/config", default-features = false }
 reth-consensus = { path = "crates/consensus/consensus", default-features = false }
 reth-consensus-common = { path = "crates/consensus/common", default-features = false }
 reth-consensus-debug-client = { path = "crates/consensus/debug-client" }
