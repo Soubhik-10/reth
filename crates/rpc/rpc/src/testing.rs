@@ -15,7 +15,10 @@
 //! on public-facing RPC endpoints without proper authentication.
 
 use alloy_consensus::{Header, Transaction};
-use alloy_eips::{eip1559::{ETHEREUM_BLOCK_GAS_LIMIT_30M,GAS_LIMIT_BOUND_DIVISOR}, eip2718::Decodable2718};
+use alloy_eips::{
+    eip1559::{ETHEREUM_BLOCK_GAS_LIMIT_30M, GAS_LIMIT_BOUND_DIVISOR},
+    eip2718::Decodable2718,
+};
 use alloy_evm::{Evm, RecoveredTx};
 use alloy_primitives::{map::HashSet, Address, U256};
 use alloy_rlp::Encodable;
@@ -117,8 +120,7 @@ where
                 let min_gas_limit = parent_gas_limit - delta;
                 let max_gas_limit = parent_gas_limit + delta;
 
-                let target_gas_limit =  ETHEREUM_BLOCK_GAS_LIMIT_30M;
-;
+                let target_gas_limit = ETHEREUM_BLOCK_GAS_LIMIT_30M;
 
                 let mut computed_gas_limit = if target_gas_limit > parent_gas_limit {
                     parent_gas_limit + delta
