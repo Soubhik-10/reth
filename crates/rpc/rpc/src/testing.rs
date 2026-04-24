@@ -235,8 +235,17 @@ where
     /// work to the blocking pool to avoid stalling the async runtime.
     async fn build_block_v1(
         &self,
-        request: TestingBuildBlockRequestV1,
+        parent_block_hash: alloy_primitives::B256,
+        payload_attributes: alloy_rpc_types_engine::PayloadAttributes,
+        transactions: Vec<alloy_primitives::Bytes>,
+        extra_data: Option<alloy_primitives::Bytes>,
     ) -> RpcResult<ExecutionPayloadEnvelopeV5> {
+        let request = TestingBuildBlockRequestV1 {
+            parent_block_hash,
+            payload_attributes,
+            transactions,
+            extra_data,
+        };
         self.build_block_v1(request).await.map_err(Into::into)
     }
 }
