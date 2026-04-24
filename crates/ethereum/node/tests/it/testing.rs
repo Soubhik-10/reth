@@ -67,19 +67,18 @@ async fn testing_rpc_build_block_works() -> eyre::Result<()> {
             };
 
             tokio::spawn(async move {
-                let res: eyre::Result<ExecutionPayloadEnvelopeV4> =
-                    client
-                        .request(
-                            "testing_buildBlockV1",
-                            (
-                                request.parent_block_hash,
-                                request.payload_attributes,
-                                request.transactions,
-                                request.extra_data,
-                            ),
-                        )
-                        .await
-                        .map_err(Into::into);
+                let res: eyre::Result<ExecutionPayloadEnvelopeV4> = client
+                    .request(
+                        "testing_buildBlockV1",
+                        (
+                            request.parent_block_hash,
+                            request.payload_attributes,
+                            request.transactions,
+                            request.extra_data,
+                        ),
+                    )
+                    .await
+                    .map_err(Into::into);
                 let _ = tx.send(res);
             });
 

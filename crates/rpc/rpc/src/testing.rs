@@ -15,7 +15,7 @@
 //! on public-facing RPC endpoints without proper authentication.
 
 use alloy_consensus::{Header, Transaction};
-use alloy_eips::eip2718::Decodable2718;
+use alloy_eips::{eip1559::{ETHEREUM_BLOCK_GAS_LIMIT_30M,GAS_LIMIT_BOUND_DIVISOR}, eip2718::Decodable2718};
 use alloy_evm::{Evm, RecoveredTx};
 use alloy_primitives::{map::HashSet, Address, U256};
 use alloy_rlp::Encodable;
@@ -111,11 +111,31 @@ where
                 let withdrawals = request.payload_attributes.withdrawals.clone();
                 let withdrawals_rlp_length = withdrawals.as_ref().map(|w| w.length()).unwrap_or(0);
 
+                let parent_gas_limit = parent.gas_limit();
+
+                let delta = (parent_gas_limit / GAS_LIMIT_BOUND_DIVISOR).saturating_sub(1);
+                let min_gas_limit = parent_gas_limit - delta;
+                let max_gas_limit = parent_gas_limit + delta;
+
+                let target_gas_limit =  ETHEREUM_BLOCK_GAS_LIMIT_30M;
+;
+
+                let mut computed_gas_limit = if target_gas_limit > parent_gas_limit {
+                    parent_gas_limit + delta
+                } else if target_gas_limit < parent_gas_limit {
+                    parent_gas_limit - delta
+                } else {
+                    parent_gas_limit
+                };
+
+                computed_gas_limit = computed_gas_limit.clamp(min_gas_limit, max_gas_limit);
+                let gas_limit = gas_limit_override.unwrap_or(computed_gas_limit);
+
                 let env_attrs = NextBlockEnvAttributes {
                     timestamp: request.payload_attributes.timestamp,
                     suggested_fee_recipient: request.payload_attributes.suggested_fee_recipient,
                     prev_randao: request.payload_attributes.prev_randao,
-                    gas_limit: gas_limit_override.unwrap_or_else(|| parent.gas_limit()),
+                    gas_limit,
                     parent_beacon_block_root: request.payload_attributes.parent_beacon_block_root,
                     withdrawals: withdrawals.map(Into::into),
                     extra_data: request.extra_data.unwrap_or_default(),
@@ -237,13 +257,13 @@ where
         &self,
         parent_block_hash: alloy_primitives::B256,
         payload_attributes: alloy_rpc_types_engine::PayloadAttributes,
-        transactions: Vec<alloy_primitives::Bytes>,
+        transactions: Option<Vec<alloy_primitives::Bytes>>,
         extra_data: Option<alloy_primitives::Bytes>,
     ) -> RpcResult<ExecutionPayloadEnvelopeV5> {
         let request = TestingBuildBlockRequestV1 {
             parent_block_hash,
             payload_attributes,
-            transactions,
+            transactions: transactions.unwrap_or_default(),
             extra_data,
         };
         self.build_block_v1(request).await.map_err(Into::into)

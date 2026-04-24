@@ -361,18 +361,17 @@ where
         let client =
             self.rpc_client().ok_or_else(|| eyre::eyre!("HTTP RPC client not available"))?;
 
-        let res: ExecutionPayloadEnvelopeV5 =
-            client
-                .request(
-                    "testing_buildBlockV1",
-                    (
-                        request.parent_block_hash,
-                        request.payload_attributes,
-                        request.transactions,
-                        request.extra_data,
-                    ),
-                )
-                .await?;
+        let res: ExecutionPayloadEnvelopeV5 = client
+            .request(
+                "testing_buildBlockV1",
+                (
+                    request.parent_block_hash,
+                    request.payload_attributes,
+                    request.transactions,
+                    request.extra_data,
+                ),
+            )
+            .await?;
         eyre::Ok(res)
     }
 }
