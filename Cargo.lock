@@ -9960,6 +9960,7 @@ dependencies = [
  "reth-network-api",
  "serde",
  "strum",
+ "tracing",
 ]
 
 [[package]]
