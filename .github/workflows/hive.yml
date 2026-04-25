@@ -1,4 +1,4 @@
-# Runs `ethereum/hive` tests.
+﻿# Runs `ethereum/hive` tests.
 
 name: hive
 
@@ -135,6 +135,7 @@ jobs:
               - eth_getCode
               - eth_getProof
               - eth_getStorage
+              - eth_simulateV1
               - eth_getTransactionBy
               - eth_getTransactionCount
               - eth_getTransactionReceipt

@@ -316,6 +316,7 @@ where
                     }),
                     gas_used: gas.tx_gas_used(),
                     logs: Vec::new(),
+                    max_used_gas: Some(gas.tx_gas_used()),
                     status: false,
                     ..Default::default()
                 }
