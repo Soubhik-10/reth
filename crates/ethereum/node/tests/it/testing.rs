@@ -64,6 +64,7 @@ async fn testing_rpc_build_block_works() -> eyre::Result<()> {
                 payload_attributes,
                 transactions: vec![],
                 extra_data: None,
+                ..Default::default()
             };
 
             tokio::spawn(async move {

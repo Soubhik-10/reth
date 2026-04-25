@@ -267,6 +267,7 @@ where
             payload_attributes,
             transactions: transactions.unwrap_or_default(),
             extra_data,
+            ..Default::default()
         };
         self.build_block_v1(request).await.map_err(Into::into)
     }
