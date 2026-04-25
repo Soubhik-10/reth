@@ -3,8 +3,8 @@ rpc-compat:
   - debug_getRawBlock/get-invalid-number (reth)
   - debug_getRawTransaction/get-invalid-hash (reth)
 
-  - eth_getStorageAt/get-storage-invalid-key-too-large (reth)
-  - eth_getStorageAt/get-storage-invalid-key (reth)
+  #- eth_getStorageAt/get-storage-invalid-key-too-large (reth)
+  #- eth_getStorageAt/get-storage-invalid-key (reth)
   - eth_getTransactionReceipt/get-legacy-contract (reth)
   - eth_getTransactionReceipt/get-legacy-input (reth)
   - eth_getTransactionReceipt/get-legacy-receipt (reth)
