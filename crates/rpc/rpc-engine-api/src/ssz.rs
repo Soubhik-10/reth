@@ -357,7 +357,7 @@ where
             Err(err) => {
                 return Ok(text_response(
                     StatusCode::BAD_REQUEST,
-                    &format!("invalid ssz payload: {err}"),
+                    &format!("invalid ssz payload: {err:?}"),
                 ))
             }
         };
@@ -387,7 +387,7 @@ where
         Err(err) => {
             return Ok(text_response(
                 StatusCode::BAD_REQUEST,
-                &format!("invalid ssz forkchoice request: {err}"),
+                &format!("invalid ssz forkchoice request: {err:?}"),
             ))
         }
     };
