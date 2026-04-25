@@ -229,7 +229,6 @@ async fn test_testing_build_block_v1_osaka() -> eyre::Result<()> {
         payload_attributes,
         transactions: vec![raw_tx],
         extra_data: None,
-        ..Default::default()
     };
 
     let envelope = node.testing_build_block_v1(request).await?;
