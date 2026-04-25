@@ -633,6 +633,7 @@ where
 {
     /// Handler for `debug_getRawHeader`
     async fn raw_header(&self, block_id: BlockId) -> RpcResult<Bytes> {
+        tracing::info!("debug_getRawHeader: block_id={block_id}");
         let header = match block_id {
             BlockId::Hash(hash) => self.provider().header(hash.into()).to_rpc_result()?,
             BlockId::Number(number_or_tag) => {
