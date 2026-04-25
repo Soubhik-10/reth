@@ -9210,10 +9210,15 @@ dependencies = [
  "alloy-rpc-types-trace",
  "alloy-signer",
  "alloy-sol-types",
+ "ethereum_ssz",
+ "ethereum_ssz_derive",
  "eyre",
  "futures",
+ "http",
+ "http-body-util",
  "jsonrpsee-core",
  "rand 0.9.4",
+ "reqwest 0.13.2",
  "reth-chainspec",
  "reth-db",
  "reth-e2e-test-utils",
@@ -9239,6 +9244,7 @@ dependencies = [
  "reth-rpc-builder",
  "reth-rpc-eth-api",
  "reth-rpc-eth-types",
+ "reth-rpc-layer",
  "reth-rpc-server-types",
  "reth-stages-types",
  "reth-tasks",
@@ -9251,6 +9257,7 @@ dependencies = [
  "similar-asserts",
  "tempfile",
  "tokio",
+ "tower",
 ]
 
 [[package]]
