@@ -410,7 +410,7 @@ struct PayloadStatusSsz {
     validation_error: Vec<u8>,
 }
 
-#[derive(Clone, Debug, Defualt, ssz_derive::Decode)]
+#[derive(Clone, Debug, Default, ssz_derive::Decode)]
 struct ForkchoiceUpdatedSsz {
     payload_status: PayloadStatusSsz,
     payload_id: alloy_primitives::B64,
