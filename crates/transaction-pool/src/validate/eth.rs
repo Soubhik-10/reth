@@ -1426,6 +1426,9 @@ pub fn ensure_intrinsic_gas<T: EthPoolTransaction>(
             .map(|l| l.iter().map(|i| i.storage_keys.len()).sum::<usize>())
             .unwrap_or_default() as u64,
         transaction.authorization_list().map(|l| l.len()).unwrap_or_default() as u64,
+        // CPSB only affects EIP-8037 (Amsterdam) state-creation gas. The pool
+        // fork-tracker tops out at Prague, so 0 is correct for all reachable spec_ids.
+        0,
     );
 
     let gas_limit = transaction.gas_limit();
