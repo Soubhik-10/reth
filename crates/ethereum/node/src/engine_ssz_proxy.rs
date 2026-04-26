@@ -4,7 +4,7 @@ use alloy_eips::{
     eip4895::Withdrawal,
     eip7685::{Requests, RequestsOrHash},
 };
-use alloy_primitives::{Address, B256,Bytes, B64};
+use alloy_primitives::{Address, Bytes, B256, B64};
 use alloy_rpc_types_engine::{
     CancunPayloadFields, ExecutionData, ExecutionPayload, ExecutionPayloadSidecar,
     ExecutionPayloadV1, ExecutionPayloadV2, ExecutionPayloadV3, ExecutionPayloadV4,
@@ -202,7 +202,9 @@ fn decode_new_payload_request(version: u8, body: &[u8]) -> Result<ExecutionData,
                     parent_beacon_block_root: request.parent_beacon_block_root,
                     versioned_hashes: request.expected_blob_versioned_hashes,
                 },
-                PraguePayloadFields::new(RequestsOrHash::Requests(Requests::new(request.execution_requests))),
+                PraguePayloadFields::new(RequestsOrHash::Requests(Requests::new(
+                    request.execution_requests,
+                ))),
             );
             Ok(ExecutionData::new(request.execution_payload.into(), sidecar))
         }
@@ -213,7 +215,9 @@ fn decode_new_payload_request(version: u8, body: &[u8]) -> Result<ExecutionData,
                     parent_beacon_block_root: request.parent_beacon_block_root,
                     versioned_hashes: request.expected_blob_versioned_hashes,
                 },
-                PraguePayloadFields::new(RequestsOrHash::Requests(Requests::new(request.execution_requests))),
+                PraguePayloadFields::new(RequestsOrHash::Requests(Requests::new(
+                    request.execution_requests,
+                ))),
             );
             Ok(ExecutionData::new(ExecutionPayload::V4(request.execution_payload), sidecar))
         }

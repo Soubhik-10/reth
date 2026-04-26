@@ -802,6 +802,11 @@ impl RpcServerArgs {
         self.rpc_force_blob_sidecar_upcasting = true;
         self
     }
+
+    pub fn with_rpc_jwtsecret(mut self, jwt_secret: JwtSecret) -> Self {
+        self.rpc_jwtsecret = Some(jwt_secret);
+        self
+    }
 }
 
 impl Default for RpcServerArgs {

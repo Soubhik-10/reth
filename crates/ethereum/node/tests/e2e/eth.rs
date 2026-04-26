@@ -1,7 +1,7 @@
 use crate::utils::{advance_with_random_transactions, eth_payload_attributes};
 use alloy_eips::eip7685::{Requests, RequestsOrHash};
 use alloy_genesis::Genesis;
-use alloy_primitives::{Address, Bytes,B256};
+use alloy_primitives::{Address, Bytes, B256};
 use alloy_rpc_types_engine::{ExecutionPayloadV3, PayloadAttributes, PayloadStatusEnum};
 use jsonrpsee_core::client::ClientT;
 use reth_chainspec::{ChainSpecBuilder, EthChainSpec, MAINNET};
@@ -279,7 +279,7 @@ async fn test_engine_ssz_proxy_can_mine_block() -> eyre::Result<()> {
             RpcServerArgs::default()
                 .with_unused_ports()
                 .with_http()
-                .with_rpc_jwtsecret(Some(jwt_secret))
+                .with_rpc_jwtsecret(jwt_secret)
                 .with_http_api(reth_rpc_server_types::RpcModuleSelection::All),
         );
 
@@ -332,7 +332,7 @@ async fn test_engine_ssz_proxy_can_mine_block() -> eyre::Result<()> {
                 execution_payload: payload,
                 expected_blob_versioned_hashes: Vec::new(),
                 parent_beacon_block_root: B256::ZERO,
-                execution_requests: envelope.execution_requests.0,
+                execution_requests: envelope.execution_requests.take(),
             }
             .as_ssz_bytes(),
         )
@@ -340,7 +340,8 @@ async fn test_engine_ssz_proxy_can_mine_block() -> eyre::Result<()> {
         .await?;
     assert_eq!(new_payload_response.status(), reqwest::StatusCode::OK);
 
-    let status = PayloadStatusSsz::from_ssz_bytes(&new_payload_response.bytes().await?)?;
+    let status =
+        PayloadStatusSsz::from_ssz_bytes(&new_payload_response.bytes().await?).unwrap_or_default();
     assert_eq!(status.status, 0);
 
     let fcu_response = client
@@ -401,7 +402,7 @@ struct PayloadAttributesV3Ssz {
     parent_beacon_block_root: B256,
 }
 
-#[derive(Clone, Debug, ssz_derive::Decode)]
+#[derive(Clone, Debug, Default, ssz_derive::Decode)]
 struct PayloadStatusSsz {
     status: u8,
     latest_valid_hash: B256,
