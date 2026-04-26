@@ -1,5 +1,5 @@
 use crate::utils::{advance_with_random_transactions, eth_payload_attributes};
-use alloy_eips::eip7685::{RequestsOrHash};
+use alloy_eips::eip7685::RequestsOrHash;
 use alloy_genesis::Genesis;
 use alloy_primitives::{Address, Bytes, B256};
 use alloy_rpc_types_engine::{ExecutionPayloadV3, PayloadAttributes, PayloadStatusEnum};
@@ -14,7 +14,7 @@ use reth_node_core::{args::RpcServerArgs, node_config::NodeConfig};
 use reth_node_ethereum::{engine_ssz_proxy::EngineSszProxyLayer, EthereumAddOns, EthereumNode};
 use reth_provider::BlockNumReader;
 use reth_rpc_api::TestingBuildBlockRequestV1;
-use reth_rpc_layer::{secret_to_bearer_header, JwtSecret};
+use reth_rpc_layer::secret_to_bearer_header;
 use reth_tasks::Runtime;
 use ssz::{Decode, Encode};
 use std::sync::Arc;
@@ -272,8 +272,6 @@ async fn test_engine_ssz_proxy_can_mine_block() -> eyre::Result<()> {
             .build(),
     );
     let genesis_hash = chain_spec.genesis_hash();
-    let jwt_secret = JwtSecret::random();
-
     let node_config =
         NodeConfig::test().with_chain(chain_spec.clone()).with_unused_ports().with_rpc(
             RpcServerArgs::default()
@@ -318,8 +316,9 @@ async fn test_engine_ssz_proxy_can_mine_block() -> eyre::Result<()> {
     let payload = envelope.execution_payload;
     let block_hash = payload.payload_inner.payload_inner.block_hash;
     let client = reqwest::Client::new();
-    let auth_url = node.auth_server_handle().http_url();
-    let auth_header = secret_to_bearer_header(&jwt_secret);
+    let auth_server = node.auth_server_handle();
+    let auth_url = auth_server.http_url();
+    let auth_header = secret_to_bearer_header(auth_server.jwt_secret());
 
     let new_payload_response = client
         .post(format!("{auth_url}/engine/v4/payloads"))
