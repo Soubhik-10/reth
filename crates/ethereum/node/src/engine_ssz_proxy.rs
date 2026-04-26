@@ -202,7 +202,7 @@ fn decode_new_payload_request(version: u8, body: &[u8]) -> Result<ExecutionData,
                     parent_beacon_block_root: request.parent_beacon_block_root,
                     versioned_hashes: request.expected_blob_versioned_hashes,
                 },
-                PraguePayloadFields::new(RequestsOrHash::Requests(request.execution_requests)),
+                PraguePayloadFields::new(RequestsOrHash::Requests(Requests::new(request.execution_requests))),
             );
             Ok(ExecutionData::new(request.execution_payload.into(), sidecar))
         }
@@ -213,7 +213,7 @@ fn decode_new_payload_request(version: u8, body: &[u8]) -> Result<ExecutionData,
                     parent_beacon_block_root: request.parent_beacon_block_root,
                     versioned_hashes: request.expected_blob_versioned_hashes,
                 },
-                PraguePayloadFields::new(RequestsOrHash::Requests(request.execution_requests)),
+                PraguePayloadFields::new(RequestsOrHash::Requests(Requests::new(request.execution_requests))),
             );
             Ok(ExecutionData::new(ExecutionPayload::V4(request.execution_payload), sidecar))
         }
@@ -301,7 +301,7 @@ struct NewPayloadV4Request {
     execution_payload: ExecutionPayloadV3,
     expected_blob_versioned_hashes: Vec<B256>,
     parent_beacon_block_root: B256,
-    execution_requests: Requests,
+    execution_requests: Vec<Bytes>,
 }
 
 #[derive(Clone, Debug, ssz_derive::Decode, ssz_derive::Encode)]
@@ -309,7 +309,7 @@ struct NewPayloadV5Request {
     execution_payload: ExecutionPayloadV4,
     expected_blob_versioned_hashes: Vec<B256>,
     parent_beacon_block_root: B256,
-    execution_requests: Requests,
+    execution_requests: Vec<Bytes>,
 }
 
 #[derive(Clone, Debug, ssz_derive::Decode, ssz_derive::Encode)]

@@ -332,7 +332,7 @@ async fn test_engine_ssz_proxy_can_mine_block() -> eyre::Result<()> {
                 execution_payload: payload,
                 expected_blob_versioned_hashes: Vec::new(),
                 parent_beacon_block_root: B256::ZERO,
-                execution_requests: envelope.execution_requests,
+                execution_requests: envelope.execution_requests.0,
             }
             .as_ssz_bytes(),
         )
@@ -376,7 +376,7 @@ struct NewPayloadV4Request {
     execution_payload: ExecutionPayloadV3,
     expected_blob_versioned_hashes: Vec<B256>,
     parent_beacon_block_root: B256,
-    execution_requests: Requests,
+    execution_requests: Vec<Bytes>,
 }
 
 #[derive(Clone, Debug, ssz_derive::Encode)]
