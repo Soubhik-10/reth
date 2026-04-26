@@ -803,7 +803,8 @@ impl RpcServerArgs {
         self
     }
 
-    pub fn with_rpc_jwtsecret(mut self, jwt_secret: JwtSecret) -> Self {
+    /// Set the RPC JWT secret for both the HTTP and WS servers.
+    pub const fn with_rpc_jwtsecret(mut self, jwt_secret: JwtSecret) -> Self {
         self.rpc_jwtsecret = Some(jwt_secret);
         self
     }

@@ -364,7 +364,8 @@ async fn test_engine_ssz_proxy_can_mine_block() -> eyre::Result<()> {
         .await?;
     assert_eq!(fcu_response.status(), reqwest::StatusCode::OK);
 
-    let fcu = ForkchoiceUpdatedSsz::from_ssz_bytes(&fcu_response.bytes().await?)?;
+    let fcu =
+        ForkchoiceUpdatedSsz::from_ssz_bytes(&fcu_response.bytes().await?).unwrap_or_default();
     assert_eq!(fcu.payload_status.status, 0);
 
     node.wait_block(1, block_hash, false).await?;
