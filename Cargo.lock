@@ -9216,6 +9216,7 @@ dependencies = [
  "futures",
  "http",
  "http-body-util",
+ "jsonrpsee",
  "jsonrpsee-core",
  "rand 0.9.4",
  "reqwest 0.13.2",
