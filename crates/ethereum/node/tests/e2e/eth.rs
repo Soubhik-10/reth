@@ -279,7 +279,6 @@ async fn test_engine_ssz_proxy_can_mine_block() -> eyre::Result<()> {
             RpcServerArgs::default()
                 .with_unused_ports()
                 .with_http()
-                .with_rpc_jwtsecret(jwt_secret)
                 .with_http_api(reth_rpc_server_types::RpcModuleSelection::All),
         );
 
