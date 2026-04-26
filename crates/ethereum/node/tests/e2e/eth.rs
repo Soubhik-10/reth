@@ -1,5 +1,5 @@
 use crate::utils::{advance_with_random_transactions, eth_payload_attributes};
-use alloy_eips::eip7685::{Requests, RequestsOrHash};
+use alloy_eips::eip7685::{RequestsOrHash};
 use alloy_genesis::Genesis;
 use alloy_primitives::{Address, Bytes, B256};
 use alloy_rpc_types_engine::{ExecutionPayloadV3, PayloadAttributes, PayloadStatusEnum};
@@ -410,7 +410,7 @@ struct PayloadStatusSsz {
     validation_error: Vec<u8>,
 }
 
-#[derive(Clone, Debug, ssz_derive::Decode)]
+#[derive(Clone, Debug, Defualt, ssz_derive::Decode)]
 struct ForkchoiceUpdatedSsz {
     payload_status: PayloadStatusSsz,
     payload_id: alloy_primitives::B64,
