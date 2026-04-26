@@ -1,7 +1,7 @@
 use crate::utils::{advance_with_random_transactions, eth_payload_attributes};
 use alloy_eips::eip7685::{Requests, RequestsOrHash};
 use alloy_genesis::Genesis;
-use alloy_primitives::{Address, B256};
+use alloy_primitives::{Address, Bytes,B256};
 use alloy_rpc_types_engine::{ExecutionPayloadV3, PayloadAttributes, PayloadStatusEnum};
 use jsonrpsee_core::client::ClientT;
 use reth_chainspec::{ChainSpecBuilder, EthChainSpec, MAINNET};

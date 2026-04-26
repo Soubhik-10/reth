@@ -4,7 +4,7 @@ use alloy_eips::{
     eip4895::Withdrawal,
     eip7685::{Requests, RequestsOrHash},
 };
-use alloy_primitives::{Address, B256, B64};
+use alloy_primitives::{Address, B256,Bytes, B64};
 use alloy_rpc_types_engine::{
     CancunPayloadFields, ExecutionData, ExecutionPayload, ExecutionPayloadSidecar,
     ExecutionPayloadV1, ExecutionPayloadV2, ExecutionPayloadV3, ExecutionPayloadV4,
