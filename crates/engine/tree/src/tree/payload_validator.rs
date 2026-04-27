@@ -50,7 +50,7 @@ use crate::tree::{
 use alloy_consensus::transaction::{Either, TxHashRef};
 use alloy_eip7928::{
     bal::{Bal, DecodedBal},
-    BlockAccessList,
+    compute_block_access_list_hash, total_bal_items, BlockAccessList, ITEM_COST,
 };
 use alloy_eips::{eip1898::BlockWithParent, eip4895::Withdrawal, NumHash};
 use alloy_evm::Evm;
@@ -569,7 +569,7 @@ where
         // The receipt root task is spawned before execution and receives receipts incrementally
         // as transactions complete, allowing parallel computation during execution.
         let execute_block_start = Instant::now();
-        let (output, senders, receipt_root_rx) =
+        let (output, senders, receipt_root_rx, built_bal) =
             match self.execute_block(state_provider, env, &input, &mut handle) {
                 Ok(output) => output,
                 Err(err) => return self.handle_execution_error(input, err, &parent_block),
@@ -650,6 +650,7 @@ where
                 &mut ctx,
                 transaction_root,
                 receipt_root_bloom,
+                built_bal.as_ref(),
                 hashed_state,
             ),
             block
@@ -907,6 +908,7 @@ where
             BlockExecutionOutput<N::Receipt>,
             Vec<Address>,
             tokio::sync::oneshot::Receiver<(B256, alloy_primitives::Bloom)>,
+            Option<BlockAccessList>,
         ),
         InsertBlockErrorKind,
     >
@@ -919,10 +921,25 @@ where
     {
         debug!(target: "engine::tree::payload_validator", "Executing block");
 
+        // EIP-7928 pre-check: reject blocks whose declared BAL exceeds the gas-limit budget
+        // (each BAL item costs ITEM_COST gas).
+        let has_bal = if let Some(bal_result) = input.block_access_list() {
+            let bal = bal_result.map_err(BlockExecutionError::other)?;
+            if total_bal_items(&bal) > input.gas_limit() / ITEM_COST as u64 {
+                return Err(InsertBlockErrorKind::Consensus(
+                    ConsensusError::BlockAccessListCostMoreThanGasLimit,
+                ));
+            }
+            true
+        } else {
+            false
+        };
+
         let mut db = debug_span!(target: "engine::tree", "build_state_db").in_scope(|| {
             State::builder()
                 .with_database(StateProviderDatabase::new(state_provider))
                 .with_bundle_update()
+                .with_bal_builder_if(has_bal)
                 .build()
         });
 
@@ -995,6 +1012,10 @@ where
         debug_span!(target: "engine::tree", "merge_transitions")
             .in_scope(|| db.merge_transitions(BundleRetention::Reverts));
 
+        // Capture the BAL produced by the BAL builder before consuming the bundle. Only set
+        // when the State was constructed with `with_bal_builder_if(true)` above.
+        let built_bal = db.take_built_alloy_bal();
+
         let output = BlockExecutionOutput { result, state: db.take_bundle() };
 
         let execution_duration = execution_start.elapsed();
@@ -1002,7 +1023,7 @@ where
         self.metrics.record_block_execution_gas_bucket(output.result.gas_used, execution_duration);
         debug!(target: "engine::tree::payload_validator", elapsed = ?execution_duration, "Executed block");
 
-        Ok((output, senders, result_rx))
+        Ok((output, senders, result_rx, built_bal))
     }
 
     /// Executes transactions and collects senders, streaming receipts to a background task.
@@ -1362,6 +1383,7 @@ where
         ctx: &mut TreeCtx<'_, N>,
         transaction_root: Option<B256>,
         receipt_root_bloom: Option<ReceiptRootBloom>,
+        built_bal: Option<&BlockAccessList>,
         hashed_state: LazyHashedPostState,
     ) -> Result<LazyHashedPostState, InsertBlockErrorKind>
     where
@@ -1397,6 +1419,21 @@ where
             return Err(err.into())
         }
         drop(_enter);
+
+        // EIP-7928: validate the produced BAL matches the hash committed in the header.
+        // Only checked when the header carries a BAL hash (post-Amsterdam) and the executor
+        // tracked execution into a BAL.
+        if let Some(header_bal_hash) = block.header().block_access_list_hash() {
+            let computed_hash =
+                built_bal.map(|bal| compute_block_access_list_hash(bal)).unwrap_or_default();
+            if computed_hash != header_bal_hash {
+                self.on_invalid_block(parent_block, block, output, None, ctx.state_mut());
+                return Err(ConsensusError::BlockAccessListHashMismatch(
+                    GotExpected { got: computed_hash, expected: header_bal_hash }.into(),
+                )
+                .into())
+            }
+        }
 
         // Wait for the background keccak256 hashing task to complete. This blocks until
         // all changed addresses and storage slots have been hashed.
