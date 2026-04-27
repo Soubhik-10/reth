@@ -9,10 +9,9 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
 use alloy_consensus::Transaction;
-use alloy_primitives::U256;
+use alloy_primitives::{Bytes, U256};
 use alloy_rlp::Encodable;
 use alloy_rpc_types_engine::PayloadAttributes as EthPayloadAttributes;
-use core::str::Bytes;
 use reth_basic_payload_builder::{
     is_better_payload, BuildArguments, BuildOutcome, MissingPayloadBehaviour, PayloadBuilder,
     PayloadConfig,
