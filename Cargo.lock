@@ -354,8 +354,9 @@ dependencies = [
 
 [[package]]
 name = "alloy-evm"
-version = "0.33.2"
-source = "git+https://github.com/alloy-rs/evm?rev=da7633f6bc9554f5a6e60773ef21b8e9d6e0cca6#da7633f6bc9554f5a6e60773ef21b8e9d6e0cca6"
+version = "0.29.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3cb6ba2dafd6327f78f2b59ae539bd5c39c57a01dc76763e92942619d934a7bb"
 dependencies = [
  "alloy-consensus 1.8.3",
  "alloy-eips 1.8.3",
@@ -14368,31 +14369,161 @@ dependencies = [
 ]
 
 [[patch.unused]]
+name = "alloy-consensus"
+version = "1.7.3"
+source = "git+https://github.com/alloy-rs/alloy?branch=bal-devnet2#1fd12c4107dcf3ad3fbbc404004a710bf91db3e6"
+
+[[patch.unused]]
+name = "alloy-consensus-any"
+version = "1.7.3"
+source = "git+https://github.com/alloy-rs/alloy?branch=bal-devnet2#1fd12c4107dcf3ad3fbbc404004a710bf91db3e6"
+
+[[patch.unused]]
+name = "alloy-contract"
+version = "1.7.3"
+source = "git+https://github.com/alloy-rs/alloy?branch=bal-devnet2#1fd12c4107dcf3ad3fbbc404004a710bf91db3e6"
+
+[[patch.unused]]
+name = "alloy-eips"
+version = "1.7.3"
+source = "git+https://github.com/alloy-rs/alloy?branch=bal-devnet2#1fd12c4107dcf3ad3fbbc404004a710bf91db3e6"
+
+[[patch.unused]]
 name = "alloy-evm"
 version = "0.33.2"
-source = "git+https://github.com/alloy-rs/evm?rev=796a387232277d1a7275892b4a56dade9a61ee13#796a387232277d1a7275892b4a56dade9a61ee13"
+source = "git+https://github.com/alloy-rs/evm?rev=da7633f6bc9554f5a6e60773ef21b8e9d6e0cca6#da7633f6bc9554f5a6e60773ef21b8e9d6e0cca6"
 
 [[patch.unused]]
-name = "reth-codecs"
-version = "0.3.1"
-source = "git+https://github.com/paradigmxyz/reth-core?rev=c763480b9fa51957fbdb69b7caead5dfc4e3752c#c763480b9fa51957fbdb69b7caead5dfc4e3752c"
+name = "alloy-genesis"
+version = "1.7.3"
+source = "git+https://github.com/alloy-rs/alloy?branch=bal-devnet2#1fd12c4107dcf3ad3fbbc404004a710bf91db3e6"
 
 [[patch.unused]]
-name = "reth-codecs-derive"
-version = "0.3.1"
-source = "git+https://github.com/paradigmxyz/reth-core?rev=c763480b9fa51957fbdb69b7caead5dfc4e3752c#c763480b9fa51957fbdb69b7caead5dfc4e3752c"
+name = "alloy-json-rpc"
+version = "1.7.3"
+source = "git+https://github.com/alloy-rs/alloy?branch=bal-devnet2#1fd12c4107dcf3ad3fbbc404004a710bf91db3e6"
 
 [[patch.unused]]
-name = "reth-primitives-traits"
-version = "0.3.1"
-source = "git+https://github.com/paradigmxyz/reth-core?rev=c763480b9fa51957fbdb69b7caead5dfc4e3752c#c763480b9fa51957fbdb69b7caead5dfc4e3752c"
+name = "alloy-network"
+version = "1.7.3"
+source = "git+https://github.com/alloy-rs/alloy?branch=bal-devnet2#1fd12c4107dcf3ad3fbbc404004a710bf91db3e6"
 
 [[patch.unused]]
-name = "reth-rpc-traits"
-version = "0.3.1"
-source = "git+https://github.com/paradigmxyz/reth-core?rev=c763480b9fa51957fbdb69b7caead5dfc4e3752c#c763480b9fa51957fbdb69b7caead5dfc4e3752c"
+name = "alloy-network-primitives"
+version = "1.7.3"
+source = "git+https://github.com/alloy-rs/alloy?branch=bal-devnet2#1fd12c4107dcf3ad3fbbc404004a710bf91db3e6"
 
 [[patch.unused]]
-name = "reth-zstd-compressors"
-version = "0.3.1"
-source = "git+https://github.com/paradigmxyz/reth-core?rev=c763480b9fa51957fbdb69b7caead5dfc4e3752c#c763480b9fa51957fbdb69b7caead5dfc4e3752c"
+name = "alloy-node-bindings"
+version = "1.7.3"
+source = "git+https://github.com/alloy-rs/alloy?branch=bal-devnet2#1fd12c4107dcf3ad3fbbc404004a710bf91db3e6"
+
+[[patch.unused]]
+name = "alloy-provider"
+version = "1.7.3"
+source = "git+https://github.com/alloy-rs/alloy?branch=bal-devnet2#1fd12c4107dcf3ad3fbbc404004a710bf91db3e6"
+
+[[patch.unused]]
+name = "alloy-pubsub"
+version = "1.7.3"
+source = "git+https://github.com/alloy-rs/alloy?branch=bal-devnet2#1fd12c4107dcf3ad3fbbc404004a710bf91db3e6"
+
+[[patch.unused]]
+name = "alloy-rpc-client"
+version = "1.7.3"
+source = "git+https://github.com/alloy-rs/alloy?branch=bal-devnet2#1fd12c4107dcf3ad3fbbc404004a710bf91db3e6"
+
+[[patch.unused]]
+name = "alloy-rpc-types"
+version = "1.7.3"
+source = "git+https://github.com/alloy-rs/alloy?branch=bal-devnet2#1fd12c4107dcf3ad3fbbc404004a710bf91db3e6"
+
+[[patch.unused]]
+name = "alloy-rpc-types-admin"
+version = "1.7.3"
+source = "git+https://github.com/alloy-rs/alloy?branch=bal-devnet2#1fd12c4107dcf3ad3fbbc404004a710bf91db3e6"
+
+[[patch.unused]]
+name = "alloy-rpc-types-anvil"
+version = "1.7.3"
+source = "git+https://github.com/alloy-rs/alloy?branch=bal-devnet2#1fd12c4107dcf3ad3fbbc404004a710bf91db3e6"
+
+[[patch.unused]]
+name = "alloy-rpc-types-any"
+version = "1.7.3"
+source = "git+https://github.com/alloy-rs/alloy?branch=bal-devnet2#1fd12c4107dcf3ad3fbbc404004a710bf91db3e6"
+
+[[patch.unused]]
+name = "alloy-rpc-types-beacon"
+version = "1.7.3"
+source = "git+https://github.com/alloy-rs/alloy?branch=bal-devnet2#1fd12c4107dcf3ad3fbbc404004a710bf91db3e6"
+
+[[patch.unused]]
+name = "alloy-rpc-types-debug"
+version = "1.7.3"
+source = "git+https://github.com/alloy-rs/alloy?branch=bal-devnet2#1fd12c4107dcf3ad3fbbc404004a710bf91db3e6"
+
+[[patch.unused]]
+name = "alloy-rpc-types-engine"
+version = "1.7.3"
+source = "git+https://github.com/alloy-rs/alloy?branch=bal-devnet2#1fd12c4107dcf3ad3fbbc404004a710bf91db3e6"
+
+[[patch.unused]]
+name = "alloy-rpc-types-eth"
+version = "1.7.3"
+source = "git+https://github.com/alloy-rs/alloy?branch=bal-devnet2#1fd12c4107dcf3ad3fbbc404004a710bf91db3e6"
+
+[[patch.unused]]
+name = "alloy-rpc-types-mev"
+version = "1.7.3"
+source = "git+https://github.com/alloy-rs/alloy?branch=bal-devnet2#1fd12c4107dcf3ad3fbbc404004a710bf91db3e6"
+
+[[patch.unused]]
+name = "alloy-rpc-types-trace"
+version = "1.7.3"
+source = "git+https://github.com/alloy-rs/alloy?branch=bal-devnet2#1fd12c4107dcf3ad3fbbc404004a710bf91db3e6"
+
+[[patch.unused]]
+name = "alloy-rpc-types-txpool"
+version = "1.7.3"
+source = "git+https://github.com/alloy-rs/alloy?branch=bal-devnet2#1fd12c4107dcf3ad3fbbc404004a710bf91db3e6"
+
+[[patch.unused]]
+name = "alloy-serde"
+version = "1.7.3"
+source = "git+https://github.com/alloy-rs/alloy?branch=bal-devnet2#1fd12c4107dcf3ad3fbbc404004a710bf91db3e6"
+
+[[patch.unused]]
+name = "alloy-signer"
+version = "1.7.3"
+source = "git+https://github.com/alloy-rs/alloy?branch=bal-devnet2#1fd12c4107dcf3ad3fbbc404004a710bf91db3e6"
+
+[[patch.unused]]
+name = "alloy-signer-local"
+version = "1.7.3"
+source = "git+https://github.com/alloy-rs/alloy?branch=bal-devnet2#1fd12c4107dcf3ad3fbbc404004a710bf91db3e6"
+
+[[patch.unused]]
+name = "alloy-transport"
+version = "1.7.3"
+source = "git+https://github.com/alloy-rs/alloy?branch=bal-devnet2#1fd12c4107dcf3ad3fbbc404004a710bf91db3e6"
+
+[[patch.unused]]
+name = "alloy-transport-http"
+version = "1.7.3"
+source = "git+https://github.com/alloy-rs/alloy?branch=bal-devnet2#1fd12c4107dcf3ad3fbbc404004a710bf91db3e6"
+
+[[patch.unused]]
+name = "alloy-transport-ipc"
+version = "1.7.3"
+source = "git+https://github.com/alloy-rs/alloy?branch=bal-devnet2#1fd12c4107dcf3ad3fbbc404004a710bf91db3e6"
+
+[[patch.unused]]
+name = "alloy-transport-ws"
+version = "1.7.3"
+source = "git+https://github.com/alloy-rs/alloy?branch=bal-devnet2#1fd12c4107dcf3ad3fbbc404004a710bf91db3e6"
+
+[[patch.unused]]
+name = "alloy-tx-macros"
+version = "1.7.3"
+source = "git+https://github.com/alloy-rs/alloy?branch=bal-devnet2#1fd12c4107dcf3ad3fbbc404004a710bf91db3e6"
