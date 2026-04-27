@@ -457,8 +457,8 @@ where
             max_rlp_length: MAX_RLP_BLOCK_SIZE,
         }));
     }
-    let block_access_list = if let Some(block_access_list) = block_access_list {
-        Some(Bytes::from(alloy_rlp::encode(&block_access_list)))
+    let block_access_list: Option<Bytes> = if let Some(block_access_list) = block_access_list {
+        Some(alloy_rlp::encode(&block_access_list).into())
     } else {
         None
     };
