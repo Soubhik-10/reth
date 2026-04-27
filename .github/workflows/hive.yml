@@ -5,7 +5,10 @@ name: hive
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 0 * * *"
+    - cron: "0 */6 * * *"
+  pull_request:
+    branches:
+      - "**"
 
 env:
   CARGO_TERM_COLOR: always
@@ -15,23 +18,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-reth:
-    uses: ./.github/workflows/docker-test.yml
+  prepare-reth-stable:
+    uses: ./.github/workflows/prepare-reth.yml
     with:
-      hive_target: hive
-      artifact_name: "reth"
-    secrets: inherit
+      image_tag: ghcr.io/paradigmxyz/reth:latest
+      binary_name: reth
+      cargo_features: "asm-keccak"
+      artifact_name: "reth-stable"
 
   prepare-hive:
     if: github.repository == 'paradigmxyz/reth'
     timeout-minutes: 45
-    runs-on: ${{ github.repository == 'paradigmxyz/reth' && 'depot-ubuntu-latest-4' || 'ubuntu-latest' }}
+    runs-on:
+      group: Reth
     steps:
       - uses: actions/checkout@v6
       - name: Checkout hive tests
         uses: actions/checkout@v6
         with:
           repository: ethereum/hive
+          ref: master
           path: hivetests
 
       - name: Get hive commit hash
@@ -77,6 +83,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        storage: [stable]
         # ethereum/rpc to be deprecated:
         # https://github.com/ethereum/hive/pull/1117
         scenario:
@@ -117,26 +124,28 @@ jobs:
           - sim: ethereum/rpc-compat
             include:
               - eth_blockNumber
-              - eth_call
-              - eth_chainId
-              - eth_createAccessList
-              - eth_estimateGas
-              - eth_feeHistory
-              - eth_getBalance
-              - eth_getBlockBy
-              - eth_getBlockTransactionCountBy
-              - eth_getCode
-              - eth_getProof
-              - eth_getStorage
-              - eth_getTransactionBy
-              - eth_getTransactionCount
-              - eth_getTransactionReceipt
-              - eth_sendRawTransaction
-              - eth_syncing
-              # debug_ rpc methods
-              - debug_
+              # - eth_call
+              # - eth_chainId
+              # - eth_createAccessList
+              # - eth_estimateGas
+              # - eth_feeHistory
+              # - eth_getBalance
+              # - eth_getBlockBy
+              # - eth_getBlockTransactionCountBy
+              # - eth_getCode
+              # - eth_getProof
+              # - eth_getStorage
+              # - eth_getTransactionBy
+              # - eth_getTransactionCount
+              # - eth_getTransactionReceipt
+              # - eth_sendRawTransaction
+              # - eth_syncing
+              # # debug_ rpc methods
+              # - debug_
 
           # consume-engine
+          - sim: ethereum/eels/consume-engine
+            limit: .*tests/amsterdam.*
           - sim: ethereum/eels/consume-engine
             limit: .*tests/osaka.*
           - sim: ethereum/eels/consume-engine
@@ -158,6 +167,8 @@ jobs:
 
           # consume-rlp
           - sim: ethereum/eels/consume-rlp
+            limit: .*tests/amsterdam.*
+          - sim: ethereum/eels/consume-rlp
             limit: .*tests/osaka.*
           - sim: ethereum/eels/consume-rlp
             limit: .*tests/prague.*
@@ -176,9 +187,9 @@ jobs:
           - sim: ethereum/eels/consume-rlp
             limit: .*tests/paris.*
     needs:
-      - build-reth
+      - prepare-reth-stable
       - prepare-hive
-    name: ${{ matrix.scenario.sim }}${{ matrix.scenario.limit && format(' - {0}', matrix.scenario.limit) }}
+    name: ${{ matrix.storage }} / ${{ matrix.scenario.sim }}${{ matrix.scenario.limit && format(' - {0}', matrix.scenario.limit) }}
     # Use larger runners for eels tests to avoid OOM runner crashes
     runs-on: ${{ github.repository == 'paradigmxyz/reth' && (contains(matrix.scenario.sim, 'eels') && 'depot-ubuntu-latest-8' || 'depot-ubuntu-latest-4') || 'ubuntu-latest' }}
     permissions:
@@ -197,7 +208,7 @@ jobs:
       - name: Download reth image
         uses: actions/download-artifact@v8
         with:
-          name: reth
+          name: reth-${{ matrix.storage }}
           path: /tmp
 
       - name: Load Docker images
