@@ -50,7 +50,7 @@ use crate::tree::{
 use alloy_consensus::transaction::{Either, TxHashRef};
 use alloy_eip7928::{
     bal::{Bal, DecodedBal},
-    BlockAccessList,
+    compute_block_access_list_hash, total_bal_items, BlockAccessList, ITEM_COST,
 };
 use alloy_eips::{eip1898::BlockWithParent, eip4895::Withdrawal, NumHash};
 use alloy_evm::Evm;
@@ -652,6 +652,7 @@ where
                 &mut ctx,
                 transaction_root,
                 receipt_root_bloom,
+                built_bal.as_ref(),
                 hashed_state,
                 built_bal
             ),
@@ -1395,6 +1396,7 @@ where
         ctx: &mut TreeCtx<'_, N>,
         transaction_root: Option<B256>,
         receipt_root_bloom: Option<ReceiptRootBloom>,
+        built_bal: Option<&BlockAccessList>,
         hashed_state: LazyHashedPostState,
         built_bal: Option<BlockAccessList>,
     ) -> Result<LazyHashedPostState, InsertBlockErrorKind>
@@ -1435,6 +1437,21 @@ where
             return Err(err.into())
         }
         drop(_enter);
+
+        // EIP-7928: validate the produced BAL matches the hash committed in the header.
+        // Only checked when the header carries a BAL hash (post-Amsterdam) and the executor
+        // tracked execution into a BAL.
+        if let Some(header_bal_hash) = block.header().block_access_list_hash() {
+            let computed_hash =
+                built_bal.map(|bal| compute_block_access_list_hash(bal)).unwrap_or_default();
+            if computed_hash != header_bal_hash {
+                self.on_invalid_block(parent_block, block, output, None, ctx.state_mut());
+                return Err(ConsensusError::BlockAccessListHashMismatch(
+                    GotExpected { got: computed_hash, expected: header_bal_hash }.into(),
+                )
+                .into())
+            }
+        }
 
         // Wait for the background keccak256 hashing task to complete. This blocks until
         // all changed addresses and storage slots have been hashed.
