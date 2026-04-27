@@ -38,6 +38,7 @@ use alloc::{
     vec::Vec,
 };
 use alloy_consensus::Header;
+use alloy_eip7928::BlockAccessList;
 use alloy_primitives::{BlockHash, BlockNumber, Bloom, B256};
 use core::{error::Error, fmt::Display};
 
@@ -85,6 +86,7 @@ pub trait FullConsensus<N: NodePrimitives>: Consensus<N::Block> {
         block: &RecoveredBlock<N::Block>,
         result: &BlockExecutionResult<N::Receipt>,
         receipt_root_bloom: Option<ReceiptRootBloom>,
+        block_access_list: Option<BlockAccessList>,
     ) -> Result<(), ConsensusError>;
 }
 
@@ -477,6 +479,9 @@ pub enum ConsensusError {
     /// Error when an unexpected block access list cost is encountered.
     #[error("block access list cost exceeds gas limit")]
     BlockAccessListCostMoreThanGasLimit,
+    /// Error when the block access list hash doesn't match the expected value.
+    #[error("block access list hash mismatch: {0}")]
+    BlockAccessListHashMismatch(GotExpectedBoxed<B256>),
     /// Any additional consensus error, for example L2-specific errors.
     #[error(transparent)]
     Other(#[from] Arc<dyn Error + Send + Sync>),
