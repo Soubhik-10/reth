@@ -172,7 +172,7 @@ pub fn execute_transactions<S, T>(
 ) -> Result<
     (
         BlockBuilderOutcome<S::Primitives>,
-        Vec<<S::Executor as BlockExecutor>::Result>,
+        Vec<ExecutionResult<<<S::Executor as BlockExecutor>::Evm as Evm>::HaltReason>>,
     ),
     EthApiError,
 >
