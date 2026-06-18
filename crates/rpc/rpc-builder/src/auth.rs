@@ -493,6 +493,11 @@ impl AuthServerHandle {
             .expect("Failed to create http client")
     }
 
+    /// Returns a bearer authorization header for raw HTTP requests to the auth server.
+    pub fn bearer_header_value(&self) -> http::HeaderValue {
+        secret_to_bearer_header(&self.secret)
+    }
+
     /// Returns a ws client connected to the server. Note that the connection can only be
     /// be established within 1 minute due to the JWT token expiration.
     pub async fn ws_client(&self) -> jsonrpsee::ws_client::WsClient {

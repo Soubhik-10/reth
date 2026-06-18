@@ -25,9 +25,17 @@ mod error;
 /// Engine API metrics.
 mod metrics;
 
+/// SSZ transport helpers.
+mod ssz;
+
 pub use engine_api::{EngineApi, EngineApiSender};
 pub use error::*;
 pub use reth_engine_api::RethEngineApi;
+pub use ssz::{
+    SharedEngineApi, SszEngineApi, SszEngineApiLayer, SszForkchoiceState, SszForkchoiceUpdated,
+    SszForkchoiceUpdatedV3Request, SszNewPayloadV3Request, SszPayloadStatus,
+    ENGINE_FORKCHOICE_UPDATED_V3_SSZ_ROUTE, ENGINE_NEW_PAYLOAD_V3_SSZ_ROUTE,
+};
 
 // re-export server trait for convenience
 pub use reth_rpc_api::EngineApiServer;

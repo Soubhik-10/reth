@@ -29,7 +29,9 @@ reth-network-api.workspace = true
 alloy-eips.workspace = true
 alloy-primitives.workspace = true
 alloy-rlp.workspace = true
-alloy-rpc-types-engine.workspace = true
+alloy-rpc-types-engine = { workspace = true, features = ["ssz"] }
+ethereum_ssz.workspace = true
+ethereum_ssz_derive.workspace = true
 
 # async
 tokio = { workspace = true, features = ["sync"] }
@@ -40,10 +42,14 @@ metrics.workspace = true
 
 # misc
 async-trait.workspace = true
+http.workspace = true
+http-body-util.workspace = true
+jsonrpsee.workspace = true
 jsonrpsee-core.workspace = true
 jsonrpsee-types.workspace = true
 serde.workspace = true
 thiserror.workspace = true
+tower.workspace = true
 tracing.workspace = true
 
 [dev-dependencies]

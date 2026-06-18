@@ -9,11 +9,17 @@ use reth_e2e_test_utils::{
     node::NodeTestContext, setup, setup_engine, transaction::TransactionTestContext, wallet::Wallet,
 };
 use reth_node_api::TreeConfig;
-use reth_node_builder::{NodeBuilder, NodeHandle};
+use reth_node_builder::{rpc::BasicEngineApiBuilder, EngineApiExt, NodeBuilder, NodeHandle};
 use reth_node_core::{args::RpcServerArgs, node_config::NodeConfig};
-use reth_node_ethereum::EthereumNode;
+use reth_node_ethereum::{node::EthereumAddOns, EthereumNode};
 use reth_provider::BlockNumReader;
 use reth_rpc_api::TestingBuildBlockRequestV1;
+use reth_rpc_engine_api::{
+    SharedEngineApi, SszEngineApiLayer, SszForkchoiceState, SszForkchoiceUpdated,
+    SszForkchoiceUpdatedV3Request, SszNewPayloadV3Request, SszPayloadStatus,
+    ENGINE_FORKCHOICE_UPDATED_V3_SSZ_ROUTE, ENGINE_NEW_PAYLOAD_V3_SSZ_ROUTE,
+};
+use reth_rpc_server_types::{RethRpcModule, RpcModuleSelection};
 use reth_tasks::Runtime;
 use std::sync::Arc;
 
@@ -250,6 +256,113 @@ async fn test_testing_build_block_v1_osaka() -> eyre::Result<()> {
     assert_eq!(status.status, PayloadStatusEnum::Valid);
 
     node.update_forkchoice(genesis_hash, block_hash).await?;
+
+    node.wait_block(1, block_hash, false).await?;
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_engine_api_ssz_routes_can_mine_a_block() -> eyre::Result<()> {
+    reth_tracing::init_test_tracing();
+    let runtime = Runtime::test();
+
+    let genesis: Genesis = serde_json::from_str(include_str!("../assets/genesis.json")).unwrap();
+    let chain_spec = Arc::new(
+        ChainSpecBuilder::default()
+            .chain(MAINNET.chain)
+            .genesis(genesis)
+            .cancun_activated()
+            .build(),
+    );
+    let genesis_hash = chain_spec.genesis_hash();
+
+    let node_config =
+        NodeConfig::test().with_chain(chain_spec.clone()).with_unused_ports().with_rpc(
+            RpcServerArgs::default()
+                .with_unused_ports()
+                .with_http()
+                .with_http_api(RpcModuleSelection::from_iter([RethRpcModule::Testing])),
+        );
+
+    let shared_engine = SharedEngineApi::default();
+    let add_ons = EthereumAddOns::default()
+        .with_engine_api(EngineApiExt::new(BasicEngineApiBuilder::default(), {
+            let shared_engine = shared_engine.clone();
+            move |engine| shared_engine.set(engine)
+        }))
+        .with_auth_http_middleware(SszEngineApiLayer::new(shared_engine));
+
+    let NodeHandle { node, node_exit_future: _ } = NodeBuilder::new(node_config)
+        .testing_node(runtime)
+        .with_types::<EthereumNode>()
+        .with_components(EthereumNode::components())
+        .with_add_ons(add_ons)
+        .launch()
+        .await?;
+
+    let node = NodeTestContext::new(node, eth_payload_attributes).await?;
+
+    let payload_attributes = PayloadAttributes {
+        timestamp: chain_spec.genesis().timestamp + 1,
+        prev_randao: B256::ZERO,
+        suggested_fee_recipient: Address::ZERO,
+        withdrawals: Some(vec![]),
+        parent_beacon_block_root: Some(B256::ZERO),
+        slot_number: None,
+    };
+
+    let request = TestingBuildBlockRequestV1 {
+        parent_block_hash: genesis_hash,
+        payload_attributes,
+        transactions: vec![],
+        extra_data: None,
+    };
+
+    let envelope = node.testing_build_block_v1(request).await?;
+    let auth = node.auth_server_handle();
+    let client = reqwest::Client::new();
+
+    let new_payload_request = SszNewPayloadV3Request {
+        execution_payload: envelope.execution_payload.clone(),
+        versioned_hashes: envelope.blobs_bundle.versioned_hashes(),
+        parent_beacon_block_root: B256::ZERO,
+    };
+
+    let new_payload_response = client
+        .post(format!("{}{}", auth.http_url(), ENGINE_NEW_PAYLOAD_V3_SSZ_ROUTE))
+        .header(reqwest::header::AUTHORIZATION, auth.bearer_header_value())
+        .header(reqwest::header::CONTENT_TYPE, "application/ssz")
+        .body(new_payload_request.to_ssz_bytes())
+        .send()
+        .await?;
+    assert!(new_payload_response.status().is_success(), "newPayload failed");
+
+    let new_payload_status =
+        SszPayloadStatus::from_ssz_bytes(&new_payload_response.bytes().await?)?;
+    assert_eq!(new_payload_status.status, 0, "expected VALID payload status");
+
+    let block_hash = envelope.execution_payload.payload_inner.payload_inner.block_hash;
+    let forkchoice_request = SszForkchoiceUpdatedV3Request {
+        forkchoice_state: SszForkchoiceState {
+            head_block_hash: block_hash,
+            safe_block_hash: genesis_hash,
+            finalized_block_hash: genesis_hash,
+        },
+    };
+
+    let forkchoice_response = client
+        .post(format!("{}{}", auth.http_url(), ENGINE_FORKCHOICE_UPDATED_V3_SSZ_ROUTE))
+        .header(reqwest::header::AUTHORIZATION, auth.bearer_header_value())
+        .header(reqwest::header::CONTENT_TYPE, "application/ssz")
+        .body(forkchoice_request.to_ssz_bytes())
+        .send()
+        .await?;
+    assert!(forkchoice_response.status().is_success(), "forkchoiceUpdated failed");
+
+    let forkchoice_status =
+        SszForkchoiceUpdated::from_ssz_bytes(&forkchoice_response.bytes().await?)?;
+    assert_eq!(forkchoice_status.payload_status.status, 0, "expected VALID forkchoice status");
 
     node.wait_block(1, block_hash, false).await?;
 
