@@ -22,8 +22,8 @@ use alloy_consensus::{
     BlockHeader,
 };
 use alloy_eips::{
-    eip1559::ETHEREUM_BLOCK_GAS_LIMIT_30M, eip4844::env_settings::EnvKzgSettings,
-    eip7840::BlobParams, BlockId,
+    eip1559::ETHEREUM_BLOCK_GAS_LIMIT_30M, eip2718::EIP8141_TX_TYPE_ID,
+    eip4844::env_settings::EnvKzgSettings, eip7840::BlobParams, BlockId,
 };
 use alloy_primitives::U256;
 use alloy_rlp::Encodable;
@@ -74,6 +74,7 @@ pub type StatefulValidationFn<T> = Arc<
 /// - EIP-1559
 /// - EIP-4844
 /// - EIP-7702
+/// - EIP-8141
 ///
 /// And enforces additional constraints such as:
 /// - Maximum transaction size
@@ -476,9 +477,13 @@ where
             EIP7702_TX_TYPE_ID if !self.eip7702 => {
                 return Err(InvalidTransactionError::Eip7702Disabled.into())
             }
+            // Reject EIP-8141 transactions until Amsterdam activates on this integration branch.
+            EIP8141_TX_TYPE_ID if !self.fork_tracker.is_amsterdam_activated() => {
+                return Err(InvalidTransactionError::TxTypeNotSupported.into())
+            }
             // Accept known transaction types when their respective fork is active
             LEGACY_TX_TYPE_ID | EIP2930_TX_TYPE_ID | EIP1559_TX_TYPE_ID | EIP4844_TX_TYPE_ID |
-            EIP7702_TX_TYPE_ID => {}
+            EIP7702_TX_TYPE_ID | EIP8141_TX_TYPE_ID => {}
 
             ty if !self.other_tx_types.bit(ty as usize) => {
                 return Err(InvalidTransactionError::TxTypeNotSupported.into())
@@ -915,6 +920,10 @@ where
             self.fork_tracker.osaka.store(true, std::sync::atomic::Ordering::Relaxed);
         }
 
+        if self.chain_spec().is_amsterdam_active_at_timestamp(new_tip_block.timestamp()) {
+            self.fork_tracker.amsterdam.store(true, std::sync::atomic::Ordering::Relaxed);
+        }
+
         self.fork_tracker
             .tip_timestamp
             .store(new_tip_block.timestamp(), std::sync::atomic::Ordering::Relaxed);
@@ -1028,6 +1037,8 @@ pub struct EthTransactionValidatorBuilder<Client, Evm> {
     prague: bool,
     /// Fork indicator whether we are in the Osaka hardfork.
     osaka: bool,
+    /// Fork indicator whether we are in the Amsterdam hardfork.
+    amsterdam: bool,
     /// Timestamp of the tip block.
     tip_timestamp: u64,
     /// Max blob count at the block's timestamp.
@@ -1119,6 +1130,7 @@ impl<Client, Evm> EthTransactionValidatorBuilder<Client, Evm> {
             cancun: chain_spec.is_cancun_active_at_timestamp(tip.timestamp()),
             prague: chain_spec.is_prague_active_at_timestamp(tip.timestamp()),
             osaka: chain_spec.is_osaka_active_at_timestamp(tip.timestamp()),
+            amsterdam: chain_spec.is_amsterdam_active_at_timestamp(tip.timestamp()),
 
             tip_timestamp: tip.timestamp(),
 
@@ -1196,6 +1208,17 @@ impl<Client, Evm> EthTransactionValidatorBuilder<Client, Evm> {
     /// Set the Osaka fork.
     pub const fn set_osaka(mut self, osaka: bool) -> Self {
         self.osaka = osaka;
+        self
+    }
+
+    /// Disables the Amsterdam fork.
+    pub const fn no_amsterdam(self) -> Self {
+        self.set_amsterdam(false)
+    }
+
+    /// Set the Amsterdam fork.
+    pub const fn set_amsterdam(mut self, amsterdam: bool) -> Self {
+        self.amsterdam = amsterdam;
         self
     }
 
@@ -1333,6 +1356,7 @@ impl<Client, Evm> EthTransactionValidatorBuilder<Client, Evm> {
             cancun,
             prague,
             osaka,
+            amsterdam,
             tip_timestamp,
             eip2718,
             eip1559,
@@ -1359,6 +1383,7 @@ impl<Client, Evm> EthTransactionValidatorBuilder<Client, Evm> {
             cancun: AtomicBool::new(cancun),
             prague: AtomicBool::new(prague),
             osaka: AtomicBool::new(osaka),
+            amsterdam: AtomicBool::new(amsterdam),
             tip_timestamp: AtomicU64::new(tip_timestamp),
             max_blob_count: AtomicU64::new(max_blob_count),
             max_initcode_size: AtomicUsize::new(max_initcode_size),
@@ -1423,6 +1448,8 @@ pub struct ForkTracker {
     pub prague: AtomicBool,
     /// Tracks if osaka is activated at the block's timestamp.
     pub osaka: AtomicBool,
+    /// Tracks if Amsterdam is activated at the block's timestamp.
+    pub amsterdam: AtomicBool,
     /// Tracks max blob count per transaction at the block's timestamp.
     pub max_blob_count: AtomicU64,
     /// Tracks the timestamp of the tip block.
@@ -1454,6 +1481,11 @@ impl ForkTracker {
         self.osaka.load(std::sync::atomic::Ordering::Relaxed)
     }
 
+    /// Returns `true` if Amsterdam fork is activated.
+    pub fn is_amsterdam_activated(&self) -> bool {
+        self.amsterdam.load(std::sync::atomic::Ordering::Relaxed)
+    }
+
     /// Returns the timestamp of the tip block.
     pub fn tip_timestamp(&self) -> u64 {
         self.tip_timestamp.load(std::sync::atomic::Ordering::Relaxed)
@@ -1472,6 +1504,12 @@ pub fn ensure_intrinsic_gas<T: EthPoolTransaction>(
     transaction: &T,
     fork_tracker: &ForkTracker,
 ) -> Result<(), InvalidPoolTransactionError> {
+    // EIP-8141 exposes a derived gas limit rather than ordinary top-level calldata. Its exact
+    // intrinsic and calldata-floor checks are performed by the frame-aware REVM handler.
+    if transaction.is_eip8141() {
+        return Ok(())
+    }
+
     use revm::primitives::hardfork::SpecId;
     let spec_id = if fork_tracker.is_prague_activated() {
         SpecId::PRAGUE
@@ -1491,6 +1529,7 @@ pub fn ensure_intrinsic_gas<T: EthPoolTransaction>(
             .map(|l| l.iter().map(|i| i.storage_keys.len()).sum::<usize>())
             .unwrap_or_default() as u64,
         transaction.authorization_list().map(|l| l.len()).unwrap_or_default() as u64,
+        None,
     );
 
     let gas_limit = transaction.gas_limit();
@@ -1542,6 +1581,7 @@ mod tests {
             cancun: false.into(),
             prague: false.into(),
             osaka: false.into(),
+            amsterdam: false.into(),
             tip_timestamp: 0.into(),
             max_blob_count: 0.into(),
             max_initcode_size: AtomicUsize::new(MAX_INITCODE_SIZE),
